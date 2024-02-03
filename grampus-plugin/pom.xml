@@ -2,18 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>grampus</artifactId>
+        <groupId>org.grampus</groupId>
+        <version>1.0.0</version>
+    </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.grampus</groupId>
-    <artifactId>grampus</artifactId>
-    <packaging>pom</packaging>
-    <version>1.0.0</version>
-    <modules>
-        <module>grampus-core</module>
-        <module>grampus-log</module>
-        <module>grampus-plugin</module>
-        <module>grampus-rest</module>
-    </modules>
+    <artifactId>grampus-plugin</artifactId>
 
 
 </project>
