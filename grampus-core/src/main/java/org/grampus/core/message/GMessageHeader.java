@@ -1,18 +1,21 @@
 package org.grampus.core.message;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.grampus.core.GEvent;
+import org.grampus.core.util.GDateTimeUtil;
+
+import java.util.*;
 
 public class GMessageHeader {
     private List<String> history = new ArrayList<String>();
+    private Map<String, Long> timestamps = new HashMap<>();
     private String id;
     private GMsgType msgType;
-    private String currentService;
     private String currentCellId;
 
-    public GMessageHeader(String serviceName, String cellId,GMsgType msgType) {
-        update(serviceName,cellId);
+    public GMessageHeader(GEvent event, String cellId,GMsgType msgType) {
+        update(event,cellId);
         this.msgType = msgType;
+        this.id = event.toString()+"_"+UUID.randomUUID().toString();
     }
 
     public GMessageHeader() {
@@ -23,17 +26,16 @@ public class GMessageHeader {
         this.msgType = msgType;
     }
 
-    protected void update(String serviceName, String cellId){
-        this.currentService = serviceName;
+    public void update(GEvent event, String cellId){
         this.currentCellId = cellId;
-        this.history.add(this.currentService+"."+this.currentCellId);
-    }
-
-    public String getCurrentService() {
-        return currentService;
+        this.history.add(event.toString());
     }
 
     public String getCurrentCellId() {
         return currentCellId;
+    }
+
+    public void updateTimestamp(String cellId, String tag){
+        this.timestamps.put(cellId+":"+tag, GDateTimeUtil.now());
     }
 }

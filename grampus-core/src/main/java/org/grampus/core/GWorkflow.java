@@ -13,13 +13,13 @@ public class GWorkflow {
         context = new GContext(workflowName, configYaml);
     }
 
-    public GWorkflow service(String serviceName, GService service) {
+    public GService service(String serviceName, GService service) {
         this.context.registerService(serviceName, service);
-        return this;
+        return service;
     }
 
-    public GWorkflow service(String serviceName) {
-       return this.service(serviceName, new GService());
+    public GService service(String serviceName) {
+       return this.service(serviceName, new GService(serviceName));
     }
 
     public GWorkflow chain(String... chains){
@@ -41,8 +41,8 @@ public class GWorkflow {
 
     public void start(){
         this.context.registerService(GConstant.PLUGIN_SERVICE, new PluginService());
+        this.context.start();
     }
-
 
 
 

@@ -5,17 +5,12 @@ import java.util.Map;
 import java.util.UUID;
 
 public class GMessage<T> {
-    private final String id;
-    private final GMessageHeader header;
+    public final GMessageHeader header;
     private final Map<String, Object> meta = new HashMap<>();
     private T payload;
 
-    public GMessage() {
-        this(UUID.randomUUID().toString());
-    }
 
-    public GMessage( String id) {
-        this.id = id;
+    public GMessage() {
         this.header = new GMessageHeader();
     }
 

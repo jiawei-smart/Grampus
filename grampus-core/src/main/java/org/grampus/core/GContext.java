@@ -21,8 +21,8 @@ public class GContext {
     private Map<String, GService> services = new HashMap<>();
     private List<String> chains = new ArrayList<>();
     private Map workflowConfig;
-    private GRouter router = new GRouter();
-    public GMessageBus messageBus = new GMessageBusImp();
+    public final GRouter router = new GRouter();
+    public final GMessageBus messageBus = new GMessageBusImp();
 
     public GContext(String workflowName, String configYaml) {
         Map config = GYaml.load(configYaml);
@@ -44,8 +44,11 @@ public class GContext {
     }
 
     public void start() {
-        router.registerWorflowEventPath(this.chains);
+        router.registerWorkflowEventPath(this.chains);
         router.registerServiceEventPath(this.services);
+        this.services.values().forEach(service->{
+            service.initService(this);
+        });
     }
 
     public Future submitTask(Runnable runnable){
@@ -73,8 +76,8 @@ public class GContext {
         });
     }
 
-    public String nextCellId(String name, GEvent event, String cellId) {
-       return router.getNextPathValue(name, event, cellId);
+    public String nextCellId(GEvent event, String cellId) {
+       return router.getNextPathValue(event, cellId);
     }
 
     public void startConsume(GEvent event, GMessageConsumer consumer){

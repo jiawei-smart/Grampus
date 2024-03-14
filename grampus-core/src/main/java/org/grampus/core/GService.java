@@ -2,11 +2,11 @@ package org.grampus.core;
 
 import org.grampus.core.message.GMessage;
 import org.grampus.core.messagebus.GMessageConsumer;
+import org.grampus.core.util.GStringUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Array;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GService {
     private String name;
@@ -21,19 +21,29 @@ public class GService {
     }
 
     protected void initService(GContext context){
+        this.context = context;
        startEventConsume();
        initCells();
     }
 
     private void initCells() {
-        cells.keySet().forEach(cellEventStr->{
-            GEvent event = new GEvent(this.name,cellEventStr);
-            List<GCell> eventCells = cells.get(cellEventStr);
+        cells.keySet().forEach(rawCellEventStr->{
+            List<String> cellEventStrList = Arrays.asList(GStringUtil.split(rawCellEventStr,GConstant.CHAIN_SPLIT_CHAR));
+            GEvent event = new GEvent(this.name,cellEventStrList.get(0));
+            Set<GEvent> nextEvents;
+            if(cellEventStrList.size() > 1){
+                nextEvents = cellEventStrList.subList(1,cellEventStrList.size()).stream().map(eventStr->new GEvent(eventStr)).collect(Collectors.toSet());
+            }else {
+                nextEvents = new HashSet<>();
+                nextEvents.add(event);
+            }
+            List<GCell> eventCells = cells.get(rawCellEventStr);
             for(int i =0; i< eventCells.size(); i++){
                 GCell cell = eventCells.get(i);
                 cell.setId(buildCellId(event,i));
                 cell.setEvent(event);
                 cell.initCell(context);
+                cell.setNextEvents(nextEvents);
             }
         });
     }
@@ -46,7 +56,7 @@ public class GService {
         cells.keySet().forEach(cellEventStr->{
             GEvent event = new GEvent(this.name,cellEventStr);
             context.messageBus.consume(event.toString(), message -> {
-                String nextDL = context.nextCellId(getName(),event,GConstant.EVENT_FIRST_CELL_ID);
+                String nextDL = context.nextCellId(event,GConstant.EVENT_FIRST_CELL_ID);
                 context.messageBus.publish(nextDL, message);
             });
         });
@@ -59,7 +69,7 @@ public class GService {
         this.cell(GConstant.DEFAULT_EVENT,cell);
     }
 
-    public void cell(String event, GCell cell){
+    public GService cell(String event, GCell cell){
         if(cells.containsKey(event)){
             cells.get(event).add(cell);
         }else {
@@ -67,16 +77,18 @@ public class GService {
             cellList.add(cell);
             this.cells.put(event,cellList);
         }
+        return this;
     }
 
-    public void cell(String event,int index, GCell cell){
+    public GService cell(String event,int index, GCell cell){
         if(cells.containsKey(event)){
             List<GCell> cellList = cells.get(event);
             if(cellList.size() > index){
                 cellList.set(index,cell);
-                return;
+                return this;
             }
         }
+        return this;
     }
 
     public void setCells(Map<String, List<GCell>> cells) {
@@ -95,7 +107,4 @@ public class GService {
         this.name = name;
     }
 
-    public String nextCellId(GEvent event, String currentCellId){
-       return context.nextCellId(this.name,event,currentCellId);
-    }
 }

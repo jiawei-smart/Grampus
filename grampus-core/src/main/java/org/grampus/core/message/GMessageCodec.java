@@ -26,6 +26,6 @@ public class GMessageCodec implements MessageCodec {
 
     @Override
     public byte systemCodecID() {
-        return 0;
+        return -1;
     }
 }

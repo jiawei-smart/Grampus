@@ -1,4 +1,4 @@
-package org.grampus.core;
+package org.grampus.core.test;
 
 import org.junit.Test;
 
