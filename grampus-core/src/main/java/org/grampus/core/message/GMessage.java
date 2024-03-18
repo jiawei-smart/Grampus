@@ -10,8 +10,8 @@ public class GMessage<T> {
     private T payload;
 
 
-    public GMessage() {
-        this.header = new GMessageHeader();
+    public GMessage(String sourceCellId) {
+        this.header = new GMessageHeader(sourceCellId);
     }
 
     public GMessageHeader getHeader() {

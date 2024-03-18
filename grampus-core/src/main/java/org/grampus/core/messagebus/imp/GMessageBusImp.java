@@ -30,7 +30,7 @@ public class GMessageBusImp implements GMessageBus {
                         try {
                             consumer.handle(message.body());
                         }catch (Exception exception){
-                            GLogger.error("failure handle message {} for topic :{}",message.body(),topic);
+                            GLogger.error("failure handle message {} for topic :{}, with {}",message.body(),topic, exception);
                         }
                     }
                 });

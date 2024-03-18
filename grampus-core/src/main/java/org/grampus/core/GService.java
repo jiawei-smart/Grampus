@@ -4,11 +4,10 @@ import org.grampus.core.message.GMessage;
 import org.grampus.core.messagebus.GMessageConsumer;
 import org.grampus.core.util.GStringUtil;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class GService {
+public class GService implements GCellController{
     private String name;
     private GContext context;
     private Map<String, List<GCell>> cells = new HashMap<>();
@@ -20,53 +19,45 @@ public class GService {
         this.name = name;
     }
 
-    protected void initService(GContext context){
-        this.context = context;
+    protected void initService(){
        startEventConsume();
        initCells();
     }
 
     private void initCells() {
         cells.keySet().forEach(rawCellEventStr->{
-            List<String> cellEventStrList = Arrays.asList(GStringUtil.split(rawCellEventStr,GConstant.CHAIN_SPLIT_CHAR));
-            GEvent event = new GEvent(this.name,cellEventStrList.get(0));
-            Set<GEvent> nextEvents;
-            if(cellEventStrList.size() > 1){
-                nextEvents = cellEventStrList.subList(1,cellEventStrList.size()).stream().map(eventStr->new GEvent(eventStr)).collect(Collectors.toSet());
-            }else {
-                nextEvents = new HashSet<>();
-                nextEvents.add(event);
-            }
+//            List<String> cellEventStrList = Arrays.asList(GStringUtil.split(rawCellEventStr,GConstant.CHAIN_SPLIT_CHAR));
+//            GEvent event = new GEvent(this.name,cellEventStrList.get(0));
+//            Set<GEvent> nextEvents;
+//            if(cellEventStrList.size() > 1){
+//                nextEvents = cellEventStrList.subList(1,cellEventStrList.size()).stream().map(eventStr->new GEvent(eventStr)).collect(Collectors.toSet());
+//            }else {
+//                nextEvents = new HashSet<>();
+//                nextEvents.add(event);
+//            }
             List<GCell> eventCells = cells.get(rawCellEventStr);
             for(int i =0; i< eventCells.size(); i++){
                 GCell cell = eventCells.get(i);
-                cell.setId(buildCellId(event,i));
-                cell.setEvent(event);
-                cell.initCell(context);
-                cell.setNextEvents(nextEvents);
+                cell.initCell(this);
             }
         });
     }
 
-    private String buildCellId(GEvent event, int i) {
-        return event.toString()+GConstant.CELL_ID_SPLIT_CHAR+i;
-    }
 
     private void startEventConsume() {
         cells.keySet().forEach(cellEventStr->{
-            GEvent event = new GEvent(this.name,cellEventStr);
-            context.messageBus.consume(event.toString(), message -> {
-                String nextDL = context.nextCellId(event,GConstant.EVENT_FIRST_CELL_ID);
-                context.messageBus.publish(nextDL, message);
-            });
+            context.router.consume(this.name+GConstant.EVENT_SPLIT_CHAR+cellEventStr, message -> {
+                String nextDL = context.router.getServiceNextPathValue(this.name, cellEventStr);
+                context.router.toMessageBus(nextDL, message);
+            }, false);
         });
     }
 
     public void init(){
     }
 
-    public void cell(GCell cell){
-        this.cell(GConstant.DEFAULT_EVENT,cell);
+    public GService cell(GCell cell){
+        return this.cell(GConstant.DEFAULT_EVENT,cell);
     }
 
     public GService cell(String event, GCell cell){
@@ -107,4 +98,34 @@ public class GService {
         this.name = name;
     }
 
+
+
+
+    @Override
+    public void addTask(Runnable runnable) {
+        this.context.submitTask(runnable);
+    }
+
+    @Override
+    public void addBlockingTask(Runnable runnable) {
+        this.context.submitBlockingTask(runnable);
+    }
+
+    @Override
+    public void consumeMessage(String topic, GMessageConsumer consumer, boolean isWorker) {
+        this.context.router.consume(topic,consumer, isWorker);
+    }
+
+    @Override
+    public String buildCellId(String event, int eventSeq) {
+        return this.name+GConstant.CELL_ID_SPLIT_CHAR+event+GConstant.CELL_ID_SPLIT_CHAR+eventSeq;
+    }
+
+    public void openEvent(String event) {
+        this.context.router.addGlobalEvent(this.name, event);
+    }
+
+    public void setContext(GContext context) {
+        this.context = context;
+    }
 }

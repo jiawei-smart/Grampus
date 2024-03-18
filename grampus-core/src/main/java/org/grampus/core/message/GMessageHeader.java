@@ -1,6 +1,5 @@
 package org.grampus.core.message;
 
-import org.grampus.core.GEvent;
 import org.grampus.core.util.GDateTimeUtil;
 
 import java.util.*;
@@ -10,12 +9,15 @@ public class GMessageHeader {
     private Map<String, Long> timestamps = new HashMap<>();
     private String id;
     private GMsgType msgType;
-    private String currentCellId;
+    private String sourceCellId;
 
-    public GMessageHeader(GEvent event, String cellId,GMsgType msgType) {
-        update(event,cellId);
+    public GMessageHeader(String cellId) {
+        this(cellId,GMsgType.BUSINESS_MESSAGE);
+    }
+
+    public GMessageHeader(String cellId,GMsgType msgType) {
         this.msgType = msgType;
-        this.id = event.toString()+"_"+UUID.randomUUID().toString();
+        this.id = sourceCellId +"_"+UUID.randomUUID();
     }
 
     public GMessageHeader() {
@@ -26,13 +28,13 @@ public class GMessageHeader {
         this.msgType = msgType;
     }
 
-    public void update(GEvent event, String cellId){
-        this.currentCellId = cellId;
+    public void update(String event, String cellId){
+        this.sourceCellId = cellId;
         this.history.add(event.toString());
     }
 
-    public String getCurrentCellId() {
-        return currentCellId;
+    public String getSourceCellId() {
+        return sourceCellId;
     }
 
     public void updateTimestamp(String cellId, String tag){

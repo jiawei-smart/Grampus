@@ -10,7 +10,7 @@ public class GWorkflow {
     }
 
     public GWorkflow(String workflowName, String configYaml){
-        context = new GContext(workflowName, configYaml);
+        context = new GContext(configYaml);
     }
 
     public GService service(String serviceName, GService service) {

@@ -1,10 +1,6 @@
 package org.grampus.core;
 
-import org.grampus.core.messagebus.GMessageBus;
-import org.grampus.core.messagebus.GMessageConsumer;
-import org.grampus.core.messagebus.imp.GMessageBusImp;
 import org.grampus.core.util.GYaml;
-import org.grampus.log.GLogger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,20 +18,21 @@ public class GContext {
     private List<String> chains = new ArrayList<>();
     private Map workflowConfig;
     public final GRouter router = new GRouter();
-    public final GMessageBus messageBus = new GMessageBusImp();
 
-    public GContext(String workflowName, String configYaml) {
+
+    public GContext(String configYaml) {
         Map config = GYaml.load(configYaml);
-        if(config != null && config.containsKey(workflowName)){
-            this.workflowConfig = (Map) config.get(workflowName);
+        if(config != null){
+            this.workflowConfig = config;
             parseConfigService();
         }else {
-            GLogger.error("Cannot found workflow config: [{}]",workflowName);
             this.workflowConfig = new HashMap();
         }
     }
 
     protected void registerService(String serviceName, GService service) {
+        service.setName(serviceName);
+        service.setContext(this);
         this.services.put(serviceName, service);
     }
 
@@ -44,10 +41,10 @@ public class GContext {
     }
 
     public void start() {
-        router.registerWorkflowEventPath(this.chains);
+        router.registerChainsEventPath(this.chains);
         router.registerServiceEventPath(this.services);
         this.services.values().forEach(service->{
-            service.initService(this);
+            service.initService();
         });
     }
 
@@ -74,17 +71,5 @@ public class GContext {
                 this.registerService((String)key, (GService)configValue);
             }
         });
-    }
-
-    public String nextCellId(GEvent event, String cellId) {
-       return router.getNextPathValue(event, cellId);
-    }
-
-    public void startConsume(GEvent event, GMessageConsumer consumer){
-        this.messageBus.consume(event.toString(),consumer,false);
-    }
-
-    public void startConsume(GEvent event, GMessageConsumer consumer, boolean isWorker){
-        this.messageBus.consume(event.toString(),consumer,isWorker);
     }
 }

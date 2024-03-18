@@ -6,35 +6,41 @@ import java.util.Objects;
 
 public class GEvent {
     private String service;
-    private String event;
+    private String eventStem;
     public GEvent(String eventStr) {
         String[] rowPointValues = GStringUtil.split(eventStr,GConstant.EVENT_SPLIT_CHAR);
         this.service = rowPointValues[0];
         if(rowPointValues.length > 1){
-            this.event = rowPointValues[1];
+            this.eventStem = rowPointValues[1];
+        }else {
+            this.eventStem = GConstant.DEFAULT_EVENT;
         }
     }
 
     public GEvent(String service, String event) {
         this.service = service;
-        this.event = event;
+        this.eventStem = event;
     }
 
     public String getService() {
         return service;
     }
 
-    public void setEvent(String event) {
-        if(GStringUtil.isNotEmpty(event)){
-            this.event = event;
+    public String getEventStem() {
+        return eventStem;
+    }
+
+    public void setEventStem(String eventStem) {
+        if(GStringUtil.isNotEmpty(eventStem)){
+            this.eventStem = eventStem;
         }else {
-            this.event = GConstant.EVENT_ALL;
+            this.eventStem = GConstant.EVENT_ALL;
         }
     }
 
     @Override
     public String toString() {
-        return this.service+GConstant.EVENT_SPLIT_CHAR+this.event;
+        return this.service+GConstant.EVENT_SPLIT_CHAR+this.eventStem;
     }
 
     @Override
@@ -42,11 +48,11 @@ public class GEvent {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         GEvent gEvent = (GEvent) o;
-        return Objects.equals(service, gEvent.service) && Objects.equals(event, gEvent.event);
+        return Objects.equals(service, gEvent.service) && Objects.equals(eventStem, gEvent.eventStem);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(service, event);
+        return Objects.hash(service, eventStem);
     }
 }
