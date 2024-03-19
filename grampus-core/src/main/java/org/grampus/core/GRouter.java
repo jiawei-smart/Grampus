@@ -10,31 +10,36 @@ import java.util.*;
 
 public class GRouter {
     public final GMessageBus messageBus = new GMessageBusImp();
-    private Map<String, Map<String, Map<Integer, String>>> servicesEventPaths = new HashMap<>();
-    private Map<String, Set<String>> chainsEventPaths = new HashMap<>();
+    private Map<String, Map<String, Map<Integer, String>>> servicesEventCellTable = new HashMap<>();
+//    private Map<String, Map<GEvent, String>> servicesEventTable = new HashMap<>();
+    private Map<String, Set<String>> chainsEventTable = new HashMap<>();
 
     private Map<String, Set<String>> serviceOpenEvents = new HashMap<>();
 
-    public void registerChainsEventPath(List<String> chainStrList) {
+    private Map<String, GAdaptor> registeredAdaptors = new HashMap<>();
+
+    public void parseWorkflowChain(List<String> chainStrList) {
         chainStrList.forEach(chainStr -> {
             List<String> events = parseChainStrAsEvents(chainStr);
             for (int i = 0; i < events.size(); i++) {
                 if (i + 1 < events.size()) {
-                    registerEventPath(events.get(i), events.get(i + 1));
+                    addChainEventPath(events.get(i), events.get(i + 1));
                 }
             }
         });
     }
 
-    private void registerEventPath(String source, String target) {
-        String formatTarget = new GEvent(target).toString();
-        if (chainsEventPaths.containsKey(source)) {
-            Set<String> targets = chainsEventPaths.get(source);
-            targets.add(formatTarget);
+    private void addChainEventPath(String source, String target) {
+        String sourceEventAdaptorId = GAdaptor.buildAdaptorId(new GEvent(source));
+        String targetEventAdaptorId = GAdaptor.buildAdaptorId(new GEvent(target));
+
+        if (chainsEventTable.containsKey(sourceEventAdaptorId)) {
+            Set<String> targets = chainsEventTable.get(sourceEventAdaptorId);
+            targets.add(targetEventAdaptorId);
         } else {
             Set<String> targets = new HashSet<>();
-            targets.add(formatTarget);
-            chainsEventPaths.put(new GEvent(source).toString(), targets);
+            targets.add(targetEventAdaptorId);
+            chainsEventTable.put(sourceEventAdaptorId, targets);
         }
     }
 
@@ -42,89 +47,82 @@ public class GRouter {
         return Arrays.asList(GStringUtil.split(chainStr, GConstant.CHAIN_SPLIT_CHAR));
     }
 
-    public void registerServiceEventPath(Map<String, GService> services) {
+    public void parseServiceEventChain(Map<String, GService> services) {
         services.values().forEach(service -> {
-            Map<String, List<GCell>> eventCells = service.getCells();
-            Map<String, Map<Integer, String>> serviceEventCellPath = new HashMap<>();
-            eventCells.keySet().forEach(eventStr -> {
-                List<GCell> cells = eventCells.get(eventStr);
-                Map<Integer, String> eventCellPath = new HashMap<>();
+            Map<GEvent, List<GCell>> eventCells = service.getCells();
+            Map<String, Map<Integer, String>> serviceEventListenerPath = new HashMap<>();
+            eventCells.keySet().forEach(event -> {
+                Map<Integer, String> eventListenerTable = new HashMap<>();
+                GAdaptor eventListenerAdaptor = registerAdaptor(event);
+                event.initDefaultEventListener(eventListenerAdaptor);
+                eventListenerTable.put(-1,eventListenerAdaptor.getId());
+                List<GCell> cells = eventCells.get(event);
                 for (int i = 0; i < cells.size(); i++) {
-                    GRouterAdaptor adaptor = new GRouterAdaptor(service.getName(), eventStr, i);
-                    adaptor.setRouter(this);
-                    cells.get(i).setAdaptor(adaptor);
-                    eventCellPath.put(i, adaptor.getId());
+                    GAdaptor cellAdaptor = registerAdaptor(service.getName(), event.getEventStem(), i);
+                    cells.get(i).setAdaptor(cellAdaptor);
+                    eventListenerTable.put(i, cellAdaptor.getId());
                 }
-                serviceEventCellPath.put(eventStr, eventCellPath);
+                serviceEventListenerPath.put(event.getEventStem(), eventListenerTable);
             });
-            this.servicesEventPaths.put(service.getName(), serviceEventCellPath);
+            this.servicesEventCellTable.put(service.getName(), serviceEventListenerPath);
         });
     }
 
-    private Set<String> getChainNextEvent(String serviceName, String currentEvent, String eventStr) {
-        String globalEventStr = serviceName + GConstant.EVENT_SPLIT_CHAR + currentEvent;
-        if (chainsEventPaths.containsKey(globalEventStr)) {
-            return chainsEventPaths.get(globalEventStr);
-        }
-        return null;
+    private GAdaptor registerAdaptor(GEvent event) {
+        return registerAdaptor(event.getService(),event.getEventStem(),-1);
     }
 
-    public String getServiceNextPathValue(String serviceName, String currentEvent, Integer currentEventSeq,String targetEvent) {
-        Map<String, Map<Integer, String>> serviceEventPath = this.servicesEventPaths.get(serviceName);
-        if (serviceEventPath != null ) {
+    private GAdaptor registerAdaptor(String service, String eventStem, Integer eventSeq) {
+        GAdaptor adaptor = new GAdaptor(service, eventStem, eventSeq, this);
+        this.registeredAdaptors.put(adaptor.getId(),adaptor);
+        return adaptor;
+    }
+
+    private Set<String> nextMessagePathFromWorkflowChain(String serviceName, String currentEvent, String targetEvent) {
+        if (isOpenEvent(serviceName, targetEvent)){
+            String adapterId = GAdaptor.buildAdaptorId(serviceName,targetEvent);
+            if (chainsEventTable.containsKey(adapterId)) {
+                return chainsEventTable.get(adapterId);
+            }
+        }
+        return Collections.EMPTY_SET;
+    }
+
+    private String nextMessagePathFromSameService(String serviceName, String currentEvent, Integer currentEventSeq, String targetEvent) {
+        if (this.servicesEventCellTable.containsKey(serviceName)) {
+            Map<String, Map<Integer, String>> servicesEventCellTable = this.servicesEventCellTable.get(serviceName);
             if(GStringUtil.equals(currentEvent,targetEvent)){
-                Map<Integer, String> eventPath = serviceEventPath.get(currentEvent);
+                Map<Integer, String> eventPath = servicesEventCellTable.get(currentEvent);
                 Integer nextEventSeq = currentEventSeq + 1;
                 if (eventPath.containsKey(nextEventSeq)) {
                     return eventPath.get(nextEventSeq);
                 }
-            }else {
-                Map<Integer, String> eventPath = serviceEventPath.get(targetEvent);
-                if(eventPath != null && eventPath.size() > 0 && eventPath.containsKey(0)){
-                    return eventPath.get(0);
-                }
+            }else if(servicesEventCellTable.containsKey(targetEvent)){
+                return servicesEventCellTable.get(targetEvent).get(-1);
             }
         }
         return null;
     }
 
-    public String getServiceNextPathValue(String serviceName, String eventStr) {
-        return this.getServiceNextPathValue(serviceName, eventStr,-1, eventStr);
-    }
-
-    public Set<String> nextMessagePaths(String serviceName, String targetEvent) {
-        return this.nextMessagePaths(serviceName, targetEvent, -1, targetEvent);
-    }
-
     public Set<String> nextMessagePaths(String serviceName, String currentEvent, Integer currentEventSeq,String targetEvent) {
-        String nextPath = this.getServiceNextPathValue(serviceName, currentEvent, currentEventSeq, targetEvent);
-        if (GStringUtil.isNotEmpty(nextPath)) {
+        String nextPath = this.nextMessagePathFromSameService(serviceName, currentEvent, currentEventSeq, targetEvent);
+        if(nextPath == null){
+            return nextMessagePathFromWorkflowChain(serviceName, currentEvent, targetEvent);
+        }else {
             Set<String> nextPaths = new HashSet();
             nextPaths.add(nextPath);
             return nextPaths;
-        } else if (isOpenEvent(serviceName, targetEvent)) {
-            return getChainNextEvent(serviceName, currentEvent, targetEvent);
-        } else {
-            return null;
         }
     }
 
     private boolean isOpenEvent(String serviceName, String eventStr) {
         return (this.serviceOpenEvents.containsKey(serviceName)
                 && this.serviceOpenEvents.get(serviceName).contains(eventStr))
-                || GStringUtil.equals(eventStr, GConstant.GLOBAL_OPEN_EVENT);
+                || GStringUtil.equals(eventStr, GConstant.GLOBAL_OPEN_ALL_EVENT);
     }
 
     public void consume(String topic, GMessageConsumer consumer, boolean isWorker) {
         this.messageBus.consume(topic, consumer);
-    }
-
-    public void publish(GRouterAdaptor adaptor, String nextEvent, GMessage message) {
-        if (GStringUtil.isEmpty(nextEvent)) {
-            nextEvent = adaptor.getEvent();
-        }
-        Set<String> nextPaths = nextMessagePaths(adaptor.getServiceName(), adaptor.getEvent(),  adaptor.getEventSeq(),nextEvent);
-        toMessageBus(nextPaths, message);
     }
 
     public void toMessageBus(String topic, GMessage message) {

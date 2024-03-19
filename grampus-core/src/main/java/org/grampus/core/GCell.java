@@ -1,7 +1,6 @@
 package org.grampus.core;
 
 import org.grampus.core.message.GMessage;
-import org.grampus.core.messagebus.GMessageConsumer;
 
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
@@ -9,7 +8,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class GCell {
     private GCellOptions options;
-    private GRouterAdaptor adaptor;
+    private GAdaptor adaptor;
     private GCellController controller;
     private BlockingQueue<GMessage> messageQueue = new LinkedBlockingDeque<>();
     private Set<String> parallelConsumerTopics = new HashSet<>();
@@ -66,7 +65,7 @@ public class GCell {
         for (int i = 0; i < this.options.getParallel(); i++) {
             String parallelConsumeTopic = this.adaptor.getId() + "_pno_" + i;
             if (!this.parallelConsumerTopics.contains(parallelConsumeTopic)) {
-                this.controller.consumeMessage(parallelConsumeTopic, this::handle, false);
+                this.adaptor.consume(parallelConsumeTopic, this::handle, false);
             }
         }
     }
@@ -97,7 +96,7 @@ public class GCell {
         this.options = options;
     }
 
-    public void setAdaptor(GRouterAdaptor adaptor) {
+    public void setAdaptor(GAdaptor adaptor) {
         this.adaptor = adaptor;
     }
 }

@@ -10,5 +10,5 @@ public class GConstant {
     public final static String CHAIN_SPLIT_CHAR = "->";
     public final static String EVENT_FIRST_CELL_ID = "EVENT_FIRST_CELL_ID";
     public final static String CELL_ID_SPLIT_CHAR = "_";
-    public static final String GLOBAL_OPEN_EVENT = "*";
+    public static final String GLOBAL_OPEN_ALL_EVENT = "*";
 }

@@ -14,8 +14,7 @@ import java.util.concurrent.Future;
 public class GContext {
     private ExecutorService executorService = Executors.newWorkStealingPool();
     private ExecutorService executorBlockingService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private Map<String, GService> services = new HashMap<>();
-    private List<String> chains = new ArrayList<>();
+
     private Map workflowConfig;
     public final GRouter router = new GRouter();
 
@@ -24,27 +23,22 @@ public class GContext {
         Map config = GYaml.load(configYaml);
         if(config != null){
             this.workflowConfig = config;
-            parseConfigService();
         }else {
             this.workflowConfig = new HashMap();
         }
     }
 
-    protected void registerService(String serviceName, GService service) {
-        service.setName(serviceName);
-        service.setContext(this);
-        this.services.put(serviceName, service);
-    }
 
     protected void addChain(String chainStr){
-        this.chains.add(chainStr);
+
     }
 
-    public void start() {
-        router.registerChainsEventPath(this.chains);
-        router.registerServiceEventPath(this.services);
-        this.services.values().forEach(service->{
+    public void start(Map<String, GService> services, List<String> chains) {
+        router.parseWorkflowChain(chains);
+        router.parseServiceEventChain(services);
+        services.values().forEach(service->{
             service.initService();
+            service.initCells();
         });
     }
 
@@ -64,12 +58,14 @@ public class GContext {
         return this.executorBlockingService.submit(callable);
     }
 
-    private void parseConfigService() {
-        this.workflowConfig.keySet().forEach(key->{
-            Object configValue = workflowConfig.get(key);
-            if(configValue instanceof GService){
-                this.registerService((String)key, (GService)configValue);
-            }
-        });
+
+
+    public Map<Object, Object> getServiceConfig(String name) {
+        return (Map<Object, Object>) workflowConfig.get(name);
     }
+
+    public Map<Object, Object> getGlobalConfig() {
+        return this.workflowConfig;
+    }
+
 }

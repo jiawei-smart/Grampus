@@ -1,21 +1,15 @@
 package org.grampus.core;
 
-import org.grampus.core.message.GMessage;
-import org.grampus.core.messagebus.GMessageConsumer;
+import org.grampus.core.util.GYaml;
 
 public interface GCellController {
-//   void publishMessage(String currentEvent, Integer eventSeq, String nextEvent, GMessage message);
-//
-//   void toMessageBus(String topic, GMessage message);
    void addTask(Runnable runnable);
 
    void addBlockingTask(Runnable runnable);
 
-   default void consumeMessage(String topic, GMessageConsumer consumer){
-      consumeMessage(topic, consumer,false);
+   <T> T getConfig(Object key, Class<T> type);
+
+   default <T> T loadConfig(String fileName, Class<T> type){
+      return GYaml.load(fileName, type);
    }
-
-   void consumeMessage(String topic, GMessageConsumer consumer, boolean isWorker);
-
-  String buildCellId(String event, int eventSeq);
 }

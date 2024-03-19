@@ -3,6 +3,7 @@ package org.grampus.core.test;
 import org.grampus.core.GCell;
 import org.grampus.core.GWorkflow;
 import org.grampus.core.message.GMessage;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Map;
@@ -11,62 +12,61 @@ public class GWorkflowTest {
 
     @Test
     public void workflowTest() {
-
-    }
-
-    public static void main(String[] args) {
-        GWorkflow workflow = new GWorkflow();
-        workflow.service("TEST_SERVICE1")
-                .cell(new GCell(){
-                    @Override
-                    public void init() {
-                        System.out.println("=S1=start");
-                        onEvent("EVENT_0", "S1-default_0");
-                    }
-                })
-                .cell("EVENT_0", new GCell(){
-                    @Override
-                    public Object handle(String from, Object payload, Map meta) {
-                        System.out.println("=S1=EVENT_0_P0 received "+payload);
-                        return payload+"->EVENT_0_P0";
-                    }
-                })
-                .cell("EVENT_0", new GCell(){
-                    @Override
-                    public void handle(Object payload, Map meta) {
-                        System.out.println("=S1=EVENT_0_P1 received "+payload);
-                        onEvent("EVENT_1",  payload+"->EVENT_0_P1");
-                    }
-                })
-                .cell("EVENT_1", new GCell() {
-                    @Override
-                    public void handle(Object payload, Map meta) {
-                        System.out.println("=S1=EVENT_1_P0 received "+payload);
-                        onEvent("EVENT_2",  payload+"->EVENT_1_P0");
-                    }
-                }).cell("EVENT_2", new GCell() {
-                    @Override
-                    public void handle(Object payload, Map meta) {
-                        System.out.println("=S1=EVENT_2_P0 received "+payload);
-                        System.out.println("S1 message: "+payload+"->EVENT_2_P0");
-                        onEvent("EVENT_3",  payload+"->EVENT_3_P0");
-                    }
-                }).openEvent("EVENT_3");
-
-        workflow.service("TEST_SERVICE2").cell(new GCell(){
+        GWorkflow workflow = new GWorkflow(){
             @Override
-            public void handle(Object payload, Map meta) {
-                System.out.println("=S2=EVENT_1_P0 received " + payload+"==>S2_EVENT_3");
-                onEvent("EVENT_3",  payload+"==>S2_default");
-            }
-        }).cell("EVENT_3",new GCell(){
-            @Override
-            public void handle(Object payload, Map meta) {
-                System.out.println( "S2 message: "+payload+"->EVENT_3");
-            }
-        });
+            public void buildWorkflow() {
+                service("S1")
+                        .cell(new GCell(){
+                            @Override
+                            public void init() {
+                                onEvent("E0", "message");
+                            }
+                        })
+                        .cell("E0", new GCell(){
+                            @Override
+                            public Object handle(String from, Object payload, Map meta) {
+                                asserts(()->Assert.assertEquals("message", payload));
+                                return payload+"->E0_P0";
+                            }
+                        })
+                        .cell("E0", new GCell(){
+                            @Override
+                            public void handle(Object payload, Map meta) {
+                                asserts(()->Assert.assertEquals("message->E0_P0", payload));
+                                onEvent("E1",  payload+"->E0_P1");
+                            }
+                        })
+                        .cell("E1", new GCell() {
+                            @Override
+                            public void handle(Object payload, Map meta) {
+                                asserts(()->Assert.assertEquals("message->E0_P0->E0_P1", payload));
+                                onEvent("E2",  payload+"->E1_P0");
+                            }
+                        }).cell("E2", new GCell() {
+                            @Override
+                            public void handle(Object payload, Map meta) {
+                               asserts(()-> Assert.assertEquals("message->E0_P0->E0_P1->E1_P0", payload));
+                                onEvent("E3",  payload+"->E3_P0");
+                            }
+                        }).openEvent("E3");
 
-        workflow.chain("TEST_SERVICE1.EVENT_2->TEST_SERVICE2");
-        workflow.start();
+                service("S2").cell(new GCell(){
+                    @Override
+                    public void handle(Object payload, Map meta) {
+                        asserts(()->Assert.assertEquals("message->E0_P0->E0_P1->E1_P0->E3_P0", payload));
+                        onEvent("E3",  payload+"==>S2_default");
+                    }
+                }).cell("E3",new GCell(){
+                    @Override
+                    public void handle(Object payload, Map meta) {
+                        asserts(()->Assert.assertEquals("message->E0_P0->E0_P1->E1_P0->E3_P0==>S2_default", payload));
+                    }
+                });
+
+                chain("S1.E3->S2");
+            }
+        };
+
+        workflow.test(6);
     }
 }
