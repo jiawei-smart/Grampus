@@ -2,6 +2,7 @@ package org.grampus.core;
 
 import org.grampus.core.message.GMessage;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -12,11 +13,15 @@ public class GCell {
     private GCellController controller;
     private BlockingQueue<GMessage> messageQueue = new LinkedBlockingDeque<>();
     private Set<String> parallelConsumerTopics = new HashSet<>();
-    private Set<GEvent> nextEvents;
+
+    private Map<Integer, GCellProcessor> parallelProcessors = new HashMap<>();
+//    private Set<GEvent> nextEvents;
 
     public GCell() {
     }
-
+    public GCell(GCellOptions options) {
+        this.options = options;
+    }
     private enum CELL_ACTION {DATA_PUSH, TIMER_OFFSET}
 
     private Random pnoCreator = new Random();
@@ -44,12 +49,20 @@ public class GCell {
     }
 
     private void drainTo(int batchSize) {
-        List<GMessage> messages = new ArrayList<>();
-        this.messageQueue.drainTo(messages, batchSize);
-        messages.forEach(message -> {
-            int pno = parallelBy(message);
-            this.adaptor.toMessageBus(this.adaptor.getId() + "_pno_" + pno, message);
-        });
+//        List<GMessage> messages = new ArrayList<>();
+//        this.messageQueue.drainTo(messages, batchSize);
+        for(int i=0;i<batchSize;i++){
+           GMessage message = this.messageQueue.poll();
+           if(message != null){
+               int pno = parallelBy(message);
+               this.parallelProcessors.get(pno).acceptMessage(message);
+           }
+        }
+//        messages.forEach(message -> {
+//            int pno = parallelBy(message);
+//            this.parallelProcessors.get(pno).acceptMessage(message);
+////            this.adaptor.toMessageBus(this.adaptor.getId() + "_pno_" + pno, message);
+//        });
     }
 
     public int parallelBy(GMessage message) {
@@ -67,6 +80,7 @@ public class GCell {
             if (!this.parallelConsumerTopics.contains(parallelConsumeTopic)) {
                 this.adaptor.consume(parallelConsumeTopic, this::handle, false);
             }
+            parallelProcessors.put(i,new GCellProcessor(this.controller.getTaskExecutor(),this::handle));
         }
     }
 
@@ -89,7 +103,9 @@ public class GCell {
     }
 
     public void init() {
-
+    }
+    public void assertTask(Runnable runnable){
+        this.controller.addAssertTask(runnable);
     }
 
     public void setOptions(GCellOptions options) {
@@ -98,5 +114,13 @@ public class GCell {
 
     public void setAdaptor(GAdaptor adaptor) {
         this.adaptor = adaptor;
+    }
+
+    public GCellController getController() {
+        return controller;
+    }
+
+    public Long now(){
+        return Instant.now().toEpochMilli();
     }
 }

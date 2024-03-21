@@ -4,6 +4,8 @@ public class GCellOptions {
     private int batchSize = 1;
     private int parallel = 1;
 
+
+
     public int getBatchSize() {
         return batchSize;
     }

@@ -2,7 +2,6 @@ package org.grampus.core.test;
 
 import org.grampus.core.GCell;
 import org.grampus.core.GWorkflow;
-import org.grampus.core.message.GMessage;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -25,27 +24,27 @@ public class GWorkflowTest {
                         .cell("E0", new GCell(){
                             @Override
                             public Object handle(String from, Object payload, Map meta) {
-                                asserts(()->Assert.assertEquals("message", payload));
+                                assertTask(()->Assert.assertEquals("message", payload));
                                 return payload+"->E0_P0";
                             }
                         })
                         .cell("E0", new GCell(){
                             @Override
                             public void handle(Object payload, Map meta) {
-                                asserts(()->Assert.assertEquals("message->E0_P0", payload));
+                                assertTask(()->Assert.assertEquals("message->E0_P0", payload));
                                 onEvent("E1",  payload+"->E0_P1");
                             }
                         })
                         .cell("E1", new GCell() {
                             @Override
                             public void handle(Object payload, Map meta) {
-                                asserts(()->Assert.assertEquals("message->E0_P0->E0_P1", payload));
+                                assertTask(()->Assert.assertEquals("message->E0_P0->E0_P1", payload));
                                 onEvent("E2",  payload+"->E1_P0");
                             }
                         }).cell("E2", new GCell() {
                             @Override
                             public void handle(Object payload, Map meta) {
-                               asserts(()-> Assert.assertEquals("message->E0_P0->E0_P1->E1_P0", payload));
+                               assertTask(()-> Assert.assertEquals("message->E0_P0->E0_P1->E1_P0", payload));
                                 onEvent("E3",  payload+"->E3_P0");
                             }
                         }).openEvent("E3");
@@ -53,20 +52,28 @@ public class GWorkflowTest {
                 service("S2").cell(new GCell(){
                     @Override
                     public void handle(Object payload, Map meta) {
-                        asserts(()->Assert.assertEquals("message->E0_P0->E0_P1->E1_P0->E3_P0", payload));
-                        onEvent("E3",  payload+"==>S2_default");
+                        assertTask(()->Assert.assertEquals("message->E0_P0->E0_P1->E1_P0->E3_P0", payload));
+                        onEvent("E4",  payload+"==>S2_default");
                     }
-                }).cell("E3",new GCell(){
+                }).cell("E4",new GCell(){
                     @Override
                     public void handle(Object payload, Map meta) {
-                        asserts(()->Assert.assertEquals("message->E0_P0->E0_P1->E1_P0->E3_P0==>S2_default", payload));
+                        assertTask(()->Assert.assertEquals("message->E0_P0->E0_P1->E1_P0->E3_P0==>S2_default", payload));
+                    }
+                });
+
+                service("S3").cell("E5",new GCell(){
+                    @Override
+                    public void handle(Object payload, Map meta) {
+                        assertTask(()->Assert.assertEquals("message->E0_P0->E0_P1->E1_P0->E3_P0",payload));
                     }
                 });
 
                 chain("S1.E3->S2");
+                chain(link(event("S1","E3"),event("S3","E5")));
             }
         };
 
-        workflow.test(6);
+        workflow.test(7);
     }
 }

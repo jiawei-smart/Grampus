@@ -11,7 +11,6 @@ import java.util.*;
 public class GRouter {
     public final GMessageBus messageBus = new GMessageBusImp();
     private Map<String, Map<String, Map<Integer, String>>> servicesEventCellTable = new HashMap<>();
-//    private Map<String, Map<GEvent, String>> servicesEventTable = new HashMap<>();
     private Map<String, Set<String>> chainsEventTable = new HashMap<>();
 
     private Map<String, Set<String>> serviceOpenEvents = new HashMap<>();
@@ -142,5 +141,9 @@ public class GRouter {
             serviceOpenEvents.put(service, new HashSet<>());
         }
         this.serviceOpenEvents.get(service).add(event);
+    }
+
+    public void clearPathCache(){
+        this.registeredAdaptors.values().forEach(GAdaptor::clearNextPathCache);
     }
 }

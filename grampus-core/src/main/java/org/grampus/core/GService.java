@@ -1,14 +1,17 @@
 package org.grampus.core;
 
-import org.grampus.core.message.GMessage;
-import org.grampus.core.messagebus.GMessageConsumer;
-import org.grampus.core.util.GStringUtil;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.grampus.log.GLogger;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class GService implements GCellController {
+    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+
     private String name;
     private GContext context;
     private Map<GEvent, List<GCell>> cells = new HashMap<>();
@@ -84,6 +87,11 @@ public class GService implements GCellController {
     }
 
     @Override
+    public GTimer createTimer(Runnable runnable) {
+        return new GTimer(runnable,this.context::schedule);
+    }
+
+    @Override
     public void addBlockingTask(Runnable runnable) {
         this.context.submitBlockingTask(runnable);
     }
@@ -99,6 +107,15 @@ public class GService implements GCellController {
         return null;
     }
 
+    @Override
+    public void addAssertTask(Runnable runnable) {
+        this.context.addAssertTask(runnable);
+    }
+
+    @Override
+    public EventLoop getTaskExecutor() {
+        return this.context.nextTaskExecutor();
+    }
     public void openEvent(String event) {
         this.context.router.addGlobalEvent(this.name, event);
     }
