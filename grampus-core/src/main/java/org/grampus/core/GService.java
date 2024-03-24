@@ -1,17 +1,15 @@
 package org.grampus.core;
 
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
 import org.grampus.log.GLogger;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class GService implements GCellController {
-    private EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-
+    private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(getScheduledTheadPoolSize());
+    private ExecutorService executorBlockingService = Executors.newCachedThreadPool();
     private String name;
     private GContext context;
     private Map<GEvent, List<GCell>> cells = new HashMap<>();
@@ -26,9 +24,15 @@ public class GService implements GCellController {
     protected void initService() {
     }
 
-    public void initCells() {
+    void initCells() {
         cells.values().forEach(eventCells -> {
             eventCells.forEach(cell -> cell.initCell(this));
+        });
+    }
+
+    public void startCells() {
+        cells.values().forEach(eventCells -> {
+            eventCells.forEach(cell -> cell.cellStart());
         });
     }
 
@@ -81,19 +85,17 @@ public class GService implements GCellController {
     }
 
 
-    @Override
-    public void addTask(Runnable runnable) {
-        this.context.submitTask(runnable);
-    }
+//    @Override
+//    public void addTask(Runnable runnable) {
+//        this.context.submitTask(runnable);
+//    }
 
-    @Override
     public GTimer createTimer(Runnable runnable) {
-        return new GTimer(runnable,this.context::schedule);
+        return new GTimer(runnable,(runner, time, timeUnit)->this.scheduledExecutorService.scheduleAtFixedRate(runner,0,time,timeUnit));
     }
 
-    @Override
     public void addBlockingTask(Runnable runnable) {
-        this.context.submitBlockingTask(runnable);
+        this.executorBlockingService.submit(runnable);
     }
 
     @Override
@@ -112,15 +114,15 @@ public class GService implements GCellController {
         this.context.addAssertTask(runnable);
     }
 
-    @Override
-    public EventLoop getTaskExecutor() {
-        return this.context.nextTaskExecutor();
-    }
     public void openEvent(String event) {
         this.context.router.addGlobalEvent(this.name, event);
     }
 
     public void setContext(GContext context) {
         this.context = context;
+    }
+
+    public int getScheduledTheadPoolSize() {
+        return GConstant.DEFAULT_SCHEDULE_WORKER_POOL_SIZE;
     }
 }

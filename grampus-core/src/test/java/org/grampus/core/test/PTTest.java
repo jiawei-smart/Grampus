@@ -19,35 +19,45 @@ public class PTTest {
 
             Integer messageSize = 1000;
 
+            Integer parallel = 30;
+
             @Override
             public void buildWorkflow() {
                 service("S1").cell(new GCell() {
                     @Override
-                    public void init() {
+                    public void start() {
                         AtomicInteger i = new AtomicInteger(1);
                         timer = getController().createTimer(() -> {
-                            if(i.get() <= messageSize){
-                                onEvent("E0", i.getAndIncrement());
-                            }else {
+                            if (i.get() <= messageSize) {
+                                onEvent("E0", i.addAndGet(1));
+                            } else {
                                 timer.cancel();
                             }
                         }).schedule(1L, TimeUnit.MILLISECONDS);
                         startTime = now();
-                        GLogger.info("**** start");
+                        GLogger.info("**** start *****");
+                        getController().createTimer(() -> System.out.println("******send******" + (i.get() - 1))).schedule(5l, TimeUnit.SECONDS);
+
                     }
                 }).openEvent("E0");
 
                 GCellOptions cellOptions = new GCellOptions();
-                cellOptions.setParallel(40);
+                cellOptions.setParallel(parallel);
                 service("S2").cell(new GCell(cellOptions) {
                     Random random = new Random();
+                    AtomicInteger receivedMsgCount = new AtomicInteger(0);
+
+                    @Override
+                    public void start() {
+                        getController().createTimer(() -> System.out.println("******received**********" + receivedMsgCount.get())).schedule(5l, TimeUnit.SECONDS);
+                    }
 
                     @Override
                     public void handle(Object payload, Map meta) {
-
                         try {
                             Thread.sleep(10);
-                            GLogger.info("**** process [{}], total cost time [{}]", payload, now() - startTime);
+                            receivedMsgCount.addAndGet(1);
+                            GLogger.info("**** process msg seq [{}],total msgCount [{}], total cost time [{}]", payload, receivedMsgCount.get(), now() - startTime);
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }

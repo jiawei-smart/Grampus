@@ -17,7 +17,7 @@ public class GWorkflowTest {
                 service("S1")
                         .cell(new GCell(){
                             @Override
-                            public void init() {
+                            public void start() {
                                 onEvent("E0", "message");
                             }
                         })

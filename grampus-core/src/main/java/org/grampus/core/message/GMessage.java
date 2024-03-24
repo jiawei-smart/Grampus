@@ -2,7 +2,6 @@ package org.grampus.core.message;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class GMessage<T> {
     public final GMessageHeader header;
@@ -11,7 +10,11 @@ public class GMessage<T> {
 
 
     public GMessage(String sourceCellId) {
-        this.header = new GMessageHeader(sourceCellId);
+        this.header = new GMessageHeader(sourceCellId, GMsgType.BUSINESS_MESSAGE);
+    }
+
+    public GMessage(String sourceCellId, GMsgType msgType) {
+        this.header = new GMessageHeader(sourceCellId, msgType);
     }
 
     public GMessageHeader getHeader() {

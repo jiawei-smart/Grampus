@@ -11,11 +11,7 @@ public class GMessageHeader {
     private GMsgType msgType;
     private String sourceCellId;
 
-    public GMessageHeader(String cellId) {
-        this(cellId,GMsgType.BUSINESS_MESSAGE);
-    }
-
-    public GMessageHeader(String cellId,GMsgType msgType) {
+    public GMessageHeader(String sourceCellId,GMsgType msgType) {
         this.msgType = msgType;
         this.id = sourceCellId +"_"+UUID.randomUUID();
     }
@@ -28,9 +24,8 @@ public class GMessageHeader {
         this.msgType = msgType;
     }
 
-    public void update(String event, String cellId){
-        this.sourceCellId = cellId;
-        this.history.add(event.toString());
+    public void update(String cellId){
+        this.history.add(cellId);
     }
 
     public String getSourceCellId() {
@@ -39,5 +34,9 @@ public class GMessageHeader {
 
     public void updateTimestamp(String cellId, String tag){
         this.timestamps.put(cellId+":"+tag, GDateTimeUtil.now());
+    }
+
+    public GMsgType msgType() {
+        return msgType;
     }
 }

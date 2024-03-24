@@ -70,7 +70,7 @@ public class GAdaptor {
             GMessage gMessage;
             if (message instanceof GMessage) {
                 gMessage = (GMessage)message;
-                gMessage.header.update(this.event, this.id);
+                gMessage.header.update(this.id);
             }else {
                 gMessage = new GMessage(this.id);
                 gMessage.setPayload(message);
