@@ -18,4 +18,8 @@ public class GLogger {
     public static void warn(String logMessage, Object...parameters){
         logger.warn(logMessage,parameters);
     }
+
+    public static void debug(String logMessage, Object...parameters){
+        logger.warn(logMessage,parameters);
+    }
 }

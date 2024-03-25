@@ -1,5 +1,8 @@
 package org.grampus.core;
 
+import org.grampus.core.annotation.rest.spec.GRestGroupSpec;
+import org.grampus.core.annotation.rest.spec.GRestMethodSpec;
+import org.grampus.core.annotation.rest.spec.GRestStaticFilesSpec;
 import org.grampus.core.message.GMessage;
 import org.grampus.core.message.GMsgType;
 import org.grampus.log.GLogger;
@@ -22,6 +25,7 @@ public class GCell {
     public GCell(GCellOptions options) {
         this.options = options;
     }
+
     private enum CELL_HANDLE_ACTION {DATA_PUSH, TIMER_OFFSET}
     private Random pnoCreator = new Random();
 
@@ -45,10 +49,9 @@ public class GCell {
 
     void cellStart(){
         controller.addBlockingTask(this::start);
+        controller.addBlockingTask(()->onPlugin(GConstant.REST_PLUGIN, new GRestAdaptor(this).getController()));
         startHeartbeat();
-        if(options.getTimerIntervalMills() > 0){
-            this.getController().createTimer(()->offset(CELL_HANDLE_ACTION.TIMER_OFFSET,null)).schedule(options.getTimerIntervalMills(), TimeUnit.MILLISECONDS);
-        }
+        startBatchTimer();
     }
 
     private void fromAdmin(GMessage message) {
@@ -106,6 +109,11 @@ public class GCell {
         message.setPayload(now());
         this.adaptor.toMessageBus(this.adaptor.getId(),message);
     }
+    private void startBatchTimer() {
+        if(options.getTimerIntervalMills() > 0){
+            this.getController().createTimer(()->offset(CELL_HANDLE_ACTION.TIMER_OFFSET,null)).schedule(options.getTimerIntervalMills(), TimeUnit.MILLISECONDS);
+        }
+    }
 
     protected void handle(GMessage message) {
         Object out = handle(message.getHeader().getSourceCellId(), message.getPayload(), message.meta());
@@ -115,6 +123,12 @@ public class GCell {
 
     public void onEvent(String event, Object message){
         this.adaptor.publishMessage(event,message);
+    }
+
+    public void onPlugin(String event, Object msg){
+        GMessage message = new GMessage(this.adaptor.getId());
+        message.setPayload(msg);
+        this.adaptor.toMessageBus(GAdaptor.buildAdaptorId(GConstant.PLUGIN_SERVICE,event),message);
     }
 
     public Object handle(String from, Object payload, Map meta) {
@@ -145,5 +159,20 @@ public class GCell {
 
     public Long now(){
         return Instant.now().toEpochMilli();
+    }
+    public GRestGroupSpec getRestGroupSpec() {
+        return null;
+    }
+
+    public List<GRestMethodSpec> getRestMethodSpec() {
+        return null;
+    }
+    public GRestStaticFilesSpec getRestStaticFilesSpec() {
+        return null;
+    }
+
+
+    public String getId(){
+        return adaptor.getId();
     }
 }

@@ -12,4 +12,5 @@ public class GConstant {
     public static final String GLOBAL_OPEN_ALL_EVENT = "*";
     public static final int DEFAULT_MESSAGE_QUEUE_SIZE = 10000;
     public static final int DEFAULT_SCHEDULE_WORKER_POOL_SIZE = 2;
+    public static final String REST_PLUGIN = "REST_PLUGIN";
 }

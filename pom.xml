@@ -20,7 +20,7 @@
         <module>grampus-log</module>
         <module>grampus-plugin</module>
         <module>grampus-rest</module>
-        <module>grampus-anotation</module>
+        <module>grampus-annotation</module>
     </modules>
 
 
