@@ -4,7 +4,7 @@ import org.grampus.core.message.GMessage;
 import org.grampus.core.messagebus.GMessageBus;
 import org.grampus.core.messagebus.GMessageConsumer;
 import org.grampus.core.messagebus.imp.GMessageBusImp;
-import org.grampus.core.util.GStringUtil;
+import org.grampus.util.GStringUtil;
 
 import java.util.*;
 

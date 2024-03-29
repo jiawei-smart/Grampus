@@ -3,7 +3,6 @@ package org.grampus.core.annotation.rest;
 import org.grampus.core.annotation.rest.spec.GRestGroupSpec;
 import org.grampus.core.annotation.rest.spec.GRestMethodSpec;
 import org.grampus.core.annotation.rest.spec.GRestStaticFilesSpec;
-
 import java.util.Map;
 
 public class GRestController {
@@ -62,5 +61,9 @@ public class GRestController {
 
     public void setDispatcher(GRestDispatcher dispatcher) {
         this.dispatcher = dispatcher;
+    }
+
+    public boolean isValidController() {
+        return this.groupSpec != null && this.methodsSpec!= null && this.methodsSpec.size() > 0;
     }
 }

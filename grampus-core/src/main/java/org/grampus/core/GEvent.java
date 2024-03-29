@@ -1,6 +1,6 @@
 package org.grampus.core;
 
-import org.grampus.core.util.GStringUtil;
+import org.grampus.util.GStringUtil;
 
 import java.util.Objects;
 

@@ -1,6 +1,6 @@
 package org.grampus.core.message;
 
-import org.grampus.core.util.GDateTimeUtil;
+import org.grampus.util.GDateTimeUtil;
 
 import java.util.*;
 

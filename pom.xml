@@ -20,8 +20,19 @@
         <module>grampus-log</module>
         <module>grampus-plugin</module>
         <module>grampus-rest</module>
+        <module>grampus-util</module>
         <module>grampus-annotation</module>
+        <module>grampus-swagger</module>
     </modules>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
 
 </project>

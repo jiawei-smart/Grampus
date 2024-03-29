@@ -5,7 +5,7 @@ import org.grampus.core.annotation.rest.spec.GRestGroupSpec;
 import org.grampus.core.annotation.rest.spec.GRestMethodFunction;
 import org.grampus.core.annotation.rest.spec.GRestMethodSpec;
 import org.grampus.core.annotation.rest.spec.GRestStaticFilesSpec;
-import org.grampus.core.util.GStringUtil;
+import org.grampus.util.GStringUtil;
 import org.grampus.log.GLogger;
 
 import java.lang.reflect.Method;
@@ -33,6 +33,7 @@ public class GRestAdaptor  implements GRestDispatcher {
         }
         this.controller.setSessionId(this.cell.getId());
         this.controller.setImplement(this.cell.getClass().getSimpleName());
+        this.controller.setDispatcher(this::dispatch);
         return this.controller;
     }
 
@@ -56,16 +57,16 @@ public class GRestAdaptor  implements GRestDispatcher {
         Map<String, GRestMethodSpec> methodSpecs = new HashMap<>();
         for(Method method : methods){
             GRestMethod gRestMethod = method.getAnnotation(GRestMethod.class);
-            if(gRestMethod == null){
-                continue;
-            }else if(methodSpecs.containsKey(gRestMethod.path())){
-                GLogger.error("GRest: same method path cannot be accepted, [{}], [{}]",gRestMethod.path(),this.cell.getId());
-            }else {
-                GRestMethodSpec methodSpec = new GRestMethodSpec(gRestMethod);
-                methodSpec.setMethod(method);
-                if(methodSpec.parseParams()){
-                    methodSpecs.put(methodSpec.getPath(),methodSpec);
-                }
+            if(gRestMethod != null){
+                parseRestMethod(gRestMethod.path(), new GRestMethodSpec(gRestMethod),method,methodSpecs);
+            }
+            GRestMethodPost gRestMethodPost = method.getAnnotation(GRestMethodPost.class);
+            if(gRestMethodPost != null){
+                parseRestMethod(gRestMethodPost.path(), new GRestMethodSpec(gRestMethodPost),method,methodSpecs);
+            }
+            GRestMethodGet gRestMethodGet = method.getAnnotation(GRestMethodGet.class);
+            if(gRestMethodGet != null){
+                parseRestMethod(gRestMethodGet.path(), new GRestMethodSpec(gRestMethodGet),method,methodSpecs);
             }
         }
         List<GRestMethodSpec> cellRestMethodsSpec = this.cell.getRestMethodSpec();
@@ -78,7 +79,20 @@ public class GRestAdaptor  implements GRestDispatcher {
                 }
             });
         }
+        this.controller.setMethodsSpec(methodSpecs);
     }
+
+    private void parseRestMethod(String path, GRestMethodSpec methodSpec, Method method, Map<String, GRestMethodSpec> methodSpecs) {
+        if(methodSpecs.containsKey(path)){
+            GLogger.error("GRest: same method path cannot be accepted, [{}], [{}]",path,this.cell.getId());
+        }else {
+            methodSpec.setMethod(method);
+            if(methodSpec.parseParams()){
+                methodSpecs.put(methodSpec.getPath(),methodSpec);
+            }
+        }
+    }
+
     @Override
     public GRestResp dispatch(String methodPath, Object[] params) {
         GRestMethodSpec methodSpec = this.getController().getMethodsSpec().get(methodPath);

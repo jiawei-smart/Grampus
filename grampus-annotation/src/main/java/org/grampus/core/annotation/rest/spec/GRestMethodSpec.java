@@ -104,4 +104,20 @@ public class GRestMethodSpec {
     public void setFunction(GRestMethodFunction function) {
         this.function = function;
     }
+
+    public List<GRestParamSpec> getParamSpecList() {
+        return paramSpecList;
+    }
+
+    public void setParamSpecList(List<GRestParamSpec> paramSpecList) {
+        this.paramSpecList = paramSpecList;
+    }
+
+    public GRestParamSpec getBodySpec() {
+        return bodySpec;
+    }
+
+    public void setBodySpec(GRestParamSpec bodySpec) {
+        this.bodySpec = bodySpec;
+    }
 }

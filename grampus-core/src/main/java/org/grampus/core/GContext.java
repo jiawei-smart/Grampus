@@ -1,24 +1,13 @@
 package org.grampus.core;
 
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.vertx.core.impl.cpu.CpuCoreSensor;
-import net.openhft.affinity.AffinityStrategies;
-import net.openhft.affinity.AffinityThreadFactory;
-import org.grampus.core.util.GYaml;
+import org.grampus.util.GYamlUtil;
 import org.grampus.log.GLogger;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
 
 public class GContext {
-//    public static final int DEFAULT_EVENT_LOOP_POOL_SIZE = CpuCoreSensor.availableProcessors();
-//    private EventLoopGroup executorService = new NioEventLoopGroup(DEFAULT_EVENT_LOOP_POOL_SIZE,
-//            new AffinityThreadFactory("Grampus-eventLoop", AffinityStrategies.SAME_CORE));
-//
 
     private Map<String, Object> workflowConfig;
     public final GRouter router = new GRouter();
@@ -27,7 +16,7 @@ public class GContext {
 
 
     public GContext(String configYaml) {
-        Map config = GYaml.load(configYaml);
+        Map config = GYamlUtil.load(configYaml);
         if(config != null){
             this.workflowConfig = config;
         }else {
@@ -37,16 +26,30 @@ public class GContext {
 
     public void start(Map<String, GService> services, List<String> chains) {
         router.parseWorkflowChain(chains);
+        services.values().forEach(GService::initService);
         router.parseServiceEventChain(services);
-        services.values().forEach(service->{
-            service.initService();
-            service.initCells();
-        });
-        services.values().forEach(service->service.startCells());
+        services.values().forEach(GService::initCells);
+        services.values().forEach(GService::startCells);
         if(this.tester != null){
             GLogger.info("==Grampus start test model==");
             this.tester.start();
         }
+        printInfo(services);
+    }
+
+    private void printInfo(Map<String, GService> services) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("\n");
+        services.forEach((serviceName, gService) -> {
+            stringBuilder.append("service: ["+serviceName+"]").append("\n");
+            gService.getCells().forEach((event, gCells) -> {
+                stringBuilder.append("  event:"+event.getEventStem()).append("\n");
+                gCells.forEach(cell->{
+                    stringBuilder.append("  --").append(cell.getId()).append("\n");
+                });
+            });
+        });
+        GLogger.info(stringBuilder.toString());
     }
 
 //    public Future submitTask(Runnable runnable){

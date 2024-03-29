@@ -5,20 +5,22 @@ import org.grampus.core.annotation.rest.spec.GRestMethodSpec;
 import org.grampus.core.annotation.rest.spec.GRestStaticFilesSpec;
 import org.grampus.core.message.GMessage;
 import org.grampus.core.message.GMsgType;
+import org.grampus.util.GDateTimeUtil;
 import org.grampus.log.GLogger;
 
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-public class GCell {
+public class GCell<T> {
     private GCellOptions options;
     private GAdaptor adaptor;
     private GCellController controller;
     private BlockingQueue<GMessage> messageQueue = new LinkedBlockingDeque<>();
     private Set<String> parallelConsumerTopics = new HashSet<>();
+
+    private boolean isRunning = true;
 
     public GCell() {
     }
@@ -65,10 +67,23 @@ public class GCell {
         }
     }
 
+    protected void onStatus(String statusAudit,boolean status){
+        this.isRunning = status;
+        if(this.isRunning){
+            clearMessageQueue();
+        }
+    }
+
+    private void clearMessageQueue() {
+        while (this.messageQueue.size() >= options.getBatchSize()){
+            this.drainTo(options.getBatchSize());
+        }
+    }
+
     private  synchronized void offset(CELL_HANDLE_ACTION cellAction, GMessage message) {
         if (cellAction == CELL_HANDLE_ACTION.DATA_PUSH) {
             this.messageQueue.offer(message);
-            if (messageQueue.size() == options.getBatchSize()) {
+            if (messageQueue.size() == options.getBatchSize() && this.isRunning) {
                 this.drainTo(options.getBatchSize());
             }
         } else if (cellAction == CELL_HANDLE_ACTION.TIMER_OFFSET) {
@@ -99,7 +114,13 @@ public class GCell {
         for (int i = 0; i < this.options.getParallel(); i++) {
             String parallelConsumeTopic = this.adaptor.getId() + "_pno_" + i;
             if (!this.parallelConsumerTopics.contains(parallelConsumeTopic)) {
-                this.adaptor.consume(parallelConsumeTopic, this::handle, false);
+                this.adaptor.consume(parallelConsumeTopic,(message)->{
+                   try{
+                       this.handle(message);
+                   }catch (Exception e){
+                       GLogger.error("failure to handle message [{}], with [{}]",message,e);
+                   }
+                }, false);
             }
         }
     }
@@ -116,7 +137,7 @@ public class GCell {
     }
 
     protected void handle(GMessage message) {
-        Object out = handle(message.getHeader().getSourceCellId(), message.getPayload(), message.meta());
+        Object out = handle(message.getHeader().getSourceCellId(), (T) message.getPayload(), message.meta());
         message.setPayload(out);
         onEvent(null, message);
     }
@@ -131,12 +152,12 @@ public class GCell {
         this.adaptor.toMessageBus(GAdaptor.buildAdaptorId(GConstant.PLUGIN_SERVICE,event),message);
     }
 
-    public Object handle(String from, Object payload, Map meta) {
+    public Object handle(String from, T payload, Map meta) {
         handle(payload, meta);
         return payload;
     }
 
-    public void handle(Object payload, Map meta) {
+    public void handle(T payload, Map meta) {
     }
 
     public void start() {
@@ -158,7 +179,7 @@ public class GCell {
     }
 
     public Long now(){
-        return Instant.now().toEpochMilli();
+        return GDateTimeUtil.now();
     }
     public GRestGroupSpec getRestGroupSpec() {
         return null;

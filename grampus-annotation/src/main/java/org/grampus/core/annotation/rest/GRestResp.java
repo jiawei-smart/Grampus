@@ -30,4 +30,8 @@ public class GRestResp {
     public Map getPayload() {
         return payload;
     }
+
+    public boolean hasError(){
+        return payload.containsKey(ERROR);
+    }
 }

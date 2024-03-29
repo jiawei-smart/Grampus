@@ -28,6 +28,7 @@ public class GTester {
             throw new RuntimeException(e);
         }
         this.assertTasks.forEach(task->task.run());
+        GLogger.info("==Grampus test end==");
     }
 
     public void addAssertTask(Runnable assertTask){

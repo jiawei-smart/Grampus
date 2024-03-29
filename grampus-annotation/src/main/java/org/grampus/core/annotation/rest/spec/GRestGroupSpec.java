@@ -4,9 +4,11 @@ import org.grampus.core.annotation.rest.GRestGroup;
 
 public class GRestGroupSpec {
     String id;
+    String description;
 
     public GRestGroupSpec(GRestGroup restGroup) {
         this.id = restGroup.id();
+        this.description = restGroup.description();
     }
 
     public String getId() {
@@ -15,5 +17,13 @@ public class GRestGroupSpec {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

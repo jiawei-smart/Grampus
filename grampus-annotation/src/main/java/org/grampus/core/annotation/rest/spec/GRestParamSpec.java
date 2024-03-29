@@ -10,7 +10,6 @@ public class GRestParamSpec {
     boolean require;
 
     boolean isBody = false;
-
     Class type;
 
     public GRestParamSpec(GRestParam gRestParam, Class type) {
@@ -65,5 +64,13 @@ public class GRestParamSpec {
 
     public void setType(Class type) {
         this.type = type;
+    }
+
+    public boolean isBody() {
+        return isBody;
+    }
+
+    public void setBody(boolean body) {
+        isBody = body;
     }
 }

@@ -1,0 +1,3 @@
+!org.grampus.core.rest.GRestOptions
+host: localhost
+port: 1024

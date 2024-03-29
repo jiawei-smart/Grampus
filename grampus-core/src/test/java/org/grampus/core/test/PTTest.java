@@ -17,7 +17,7 @@ public class PTTest {
             long startTime;
             GTimer timer;
 
-            Integer messageSize = 1000000;
+            Integer messageSize = 10000;
 
             Integer parallel = 30;
 
