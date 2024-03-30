@@ -17,12 +17,12 @@ public class GRestOptions implements GClientConfig {
 
     public String getHost() {
         if(GStringUtil.equals(host,"localhost")){
-            try {
-                InetAddress inetadd = InetAddress.getLocalHost();
-                return inetadd.getHostName();
-            } catch (UnknownHostException e) {
-                throw new RuntimeException(e);
-            }
+//            try {
+//                InetAddress inetadd = InetAddress.getLocalHost();
+//                return inetadd.getHostName();
+//            } catch (UnknownHostException e) {
+//                throw new RuntimeException(e);
+//            }
         }
         return host;
     }

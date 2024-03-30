@@ -1,11 +1,11 @@
 package org.grampus.log;
 
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GLogger {
-    static final Logger logger = LogManager.getLogger();
+//    static final Logger logger = LogManager.getLogger();
+    private static final Logger logger = LoggerFactory.getLogger(GLogger.class);
 
    public static void info(String logMessage, Object...parameters){
        logger.info(logMessage,parameters);

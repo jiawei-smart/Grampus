@@ -7,7 +7,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 public class GRestMethodSpec {
     String path;
@@ -27,12 +26,12 @@ public class GRestMethodSpec {
         this.description = restMethod.description();
         this.restMethodType = restMethod.requestType();
     }
-    public GRestMethodSpec(GRestMethodGet restMethodGet) {
+    public GRestMethodSpec(GRestGet restMethodGet) {
         this.path = restMethodGet.path();
         this.description = restMethodGet.description();
         this.restMethodType = GRestMethodType.GET;
     }
-    public GRestMethodSpec(GRestMethodPost restMethodPost) {
+    public GRestMethodSpec(GRestPost restMethodPost) {
         this.path = restMethodPost.path();
         this.description = restMethodPost.description();
         this.restMethodType = GRestMethodType.POST;
@@ -68,7 +67,6 @@ public class GRestMethodSpec {
 
     public void setMethod(Method method) {
         this.method = method;
-        parseParams();
     }
 
     public boolean parseParams() {
@@ -77,10 +75,10 @@ public class GRestMethodSpec {
         Annotation[][] paramAnnotations = method.getParameterAnnotations();
         for(int i= 0; i < paramTypes.length ; i++){
            Annotation paramAnnotation = paramAnnotations[i][0];
-           if(paramAnnotation instanceof  GRestParam){
+           if(paramAnnotation.annotationType().isAssignableFrom(GRestParam.class)){
                GRestParam restParam = (GRestParam) paramAnnotation;
                paramSpecList.add(new GRestParamSpec(restParam, paramTypes[i]));
-           }else if(paramAnnotation instanceof GRestBody){
+           }else if(paramAnnotation.annotationType().isAssignableFrom(GRestBody.class)){
                GRestBody restBody = (GRestBody) paramAnnotation;
                if(bodySpec != null){
                    GLogger.error("GRest: invalid rest method [{}] with duplicated body param [{}]", this.method.getName(),paramTypes[i]);

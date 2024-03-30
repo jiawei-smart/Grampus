@@ -10,7 +10,7 @@ public class GRestParamSpec {
     boolean require;
 
     boolean isBody = false;
-    Class type;
+    Class type = String.class;
 
     public GRestParamSpec(GRestParam gRestParam, Class type) {
         this.name = gRestParam.name();
@@ -21,9 +21,11 @@ public class GRestParamSpec {
     }
 
     public GRestParamSpec(GRestBody restBody, Class paramType) {
+        this.name = "body";
         this.description = restBody.description();
         this.example = restBody.example();
         this.isBody = true;
+        this.type = paramType;
     }
 
     public String getName() {

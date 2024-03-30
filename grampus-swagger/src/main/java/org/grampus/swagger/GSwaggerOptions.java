@@ -1,12 +1,11 @@
 package org.grampus.swagger;
 
 
-import org.grampus.swagger.model.Contact;
+import org.grampus.swagger.config.model.Contact;
 import org.grampus.util.GStringUtil;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.UnknownHostException;
 import java.util.Collections;
 
 public class GSwaggerOptions {
@@ -21,7 +20,7 @@ public class GSwaggerOptions {
     private Contact contact = new Contact().name("org.grampus.sample").email("org.grampus@github.com").url("https://org.grampus");
     private String description;
     private boolean isEnableStaticMapping = true;
-    private boolean isEnableCors = true;
+    private boolean isEnableCors = false;
 
 
 
@@ -101,12 +100,12 @@ public class GSwaggerOptions {
 
     public String getHost() {
         if(GStringUtil.equals(host,"localhost")){
-            try {
-                InetAddress inetadd = InetAddress.getLocalHost();
-                return inetadd.getHostName();
-            } catch (UnknownHostException e) {
-                throw new RuntimeException(e);
-            }
+//            try {
+//                InetAddress inetadd = InetAddress.getLocalHost();
+//                return inetadd.getHostName();
+//            } catch (UnknownHostException e) {
+//                throw new RuntimeException(e);
+//            }
         }
         return host;
     }

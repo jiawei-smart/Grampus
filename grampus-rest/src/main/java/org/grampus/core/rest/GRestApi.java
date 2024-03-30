@@ -1,7 +1,7 @@
 package org.grampus.core.rest;
 
-import org.grampus.swagger.GSparkSwagger;
+import org.grampus.swagger.GSwagger;
 
 public interface GRestApi {
-    void bind(GSparkSwagger swagger);
+    void bind(GSwagger swagger);
 }

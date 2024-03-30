@@ -60,13 +60,13 @@ public class GRestAdaptor  implements GRestDispatcher {
             if(gRestMethod != null){
                 parseRestMethod(gRestMethod.path(), new GRestMethodSpec(gRestMethod),method,methodSpecs);
             }
-            GRestMethodPost gRestMethodPost = method.getAnnotation(GRestMethodPost.class);
-            if(gRestMethodPost != null){
-                parseRestMethod(gRestMethodPost.path(), new GRestMethodSpec(gRestMethodPost),method,methodSpecs);
+            GRestPost gRestPost = method.getAnnotation(GRestPost.class);
+            if(gRestPost != null){
+                parseRestMethod(gRestPost.path(), new GRestMethodSpec(gRestPost),method,methodSpecs);
             }
-            GRestMethodGet gRestMethodGet = method.getAnnotation(GRestMethodGet.class);
-            if(gRestMethodGet != null){
-                parseRestMethod(gRestMethodGet.path(), new GRestMethodSpec(gRestMethodGet),method,methodSpecs);
+            GRestGet gRestGet = method.getAnnotation(GRestGet.class);
+            if(gRestGet != null){
+                parseRestMethod(gRestGet.path(), new GRestMethodSpec(gRestGet),method,methodSpecs);
             }
         }
         List<GRestMethodSpec> cellRestMethodsSpec = this.cell.getRestMethodSpec();

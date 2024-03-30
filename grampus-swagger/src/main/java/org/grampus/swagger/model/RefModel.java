@@ -17,15 +17,6 @@ public class RefModel implements Model {
     public RefModel() {
     }
 
-    public RefModel(String ref) {
-//        set$ref(ref);
-    }
-
-    public RefModel asDefault(String ref) {
-//        this.set$ref(RefType.DEFINITION.getInternalPrefix() + ref);
-        return this;
-    }
-
     // not allowed in a $ref
     @JsonIgnore
     @Override
