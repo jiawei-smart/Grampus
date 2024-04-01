@@ -13,6 +13,8 @@ public class GRestOptions implements GClientConfig {
     private String host;
     private Integer port;
 
+    private Long initMaxWaitTimeMills = 1000l;
+
     private GSwaggerOptions swaggerOptions;
 
     public String getHost() {
@@ -55,5 +57,13 @@ public class GRestOptions implements GClientConfig {
     @Override
     public String getConfigKey() {
         return GREST_CONFIG_KEY;
+    }
+
+    public Long getInitMaxWaitTimeMills() {
+        return initMaxWaitTimeMills;
+    }
+
+    public void setInitMaxWaitTimeMills(Long initMaxWaitTimeMills) {
+        this.initMaxWaitTimeMills = initMaxWaitTimeMills;
     }
 }

@@ -13,4 +13,13 @@ public class GConstant {
     public static final int DEFAULT_MESSAGE_QUEUE_SIZE = 10000;
     public static final int DEFAULT_SCHEDULE_WORKER_POOL_SIZE = 2;
     public static final String REST_PLUGIN = "REST_PLUGIN";
+    public static final String MONITOR_SERVICE_START_TIME = "service.start.time";
+    public static final String MONITOR_SERVICE_NAME = "service.name";
+    public static final String MONITOR_CELL_MESSAGE_QUEUE_SIZE = "cell.message.queue.size";
+    public static final String MONITOR_CELL_START_TIME = "cell.start.time";
+    public static final String MONITOR_CELL_LAST_HEARTBEAT_LATENCY = "cell.last.heartbeat.latency";
+    public static final String MONITOR_CELL_ID = "cell.id";
+    public static final String MONITOR_CELL_PNO_COUNT = "cell.pno.count";
+    public static final String MONITOR_CELL_BATCH_SIZE = "cell.batch.size";
+
 }

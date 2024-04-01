@@ -43,7 +43,7 @@ public class GRouter {
     }
 
     private List<String> parseChainStrAsEvents(String chainStr) {
-        return Arrays.asList(GStringUtil.split(chainStr, GConstant.CHAIN_SPLIT_CHAR));
+        return GStringUtil.splitAsList(chainStr, GConstant.CHAIN_SPLIT_CHAR);
     }
 
     public void parseServiceEventChain(Map<String, GService> services) {

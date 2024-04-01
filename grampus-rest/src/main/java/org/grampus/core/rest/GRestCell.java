@@ -2,17 +2,20 @@ package org.grampus.core.rest;
 import org.grampus.core.GConstant;
 import org.grampus.core.annotation.plugin.GPlugin;
 import org.grampus.core.annotation.rest.GRestController;
+import org.grampus.core.monitor.MonitorMap;
 import org.grampus.core.plugin.GPluginCell;
-import org.grampus.core.rest.GRestOptions;
+import org.grampus.log.GLogger;
 
 import java.io.File;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @GPlugin(event = GConstant.REST_PLUGIN)
 public class GRestCell extends GPluginCell<GRestController> {
     public static final String REST_DEFAULT_CONFIG_YAML = "plugin/rest.yaml";
     private GRestClient client;
-    private Integer registeredCount = 0;
+    private AtomicInteger expectedCellCount = new AtomicInteger();
+    private AtomicInteger registeredCount = new AtomicInteger();
 
     @Override
     public void start() {
@@ -26,29 +29,35 @@ public class GRestCell extends GPluginCell<GRestController> {
         }
         client = new GRestClient();
         onStatus("START", true);
+        startClientAfterReady(config);
+    }
+
+    private void startClientAfterReady(GRestOptions config) {
+        long startTime = now();
         while (true) {
-            if (isAllCellInitRest()) {
+            if (registeredCount.get() == expectedCellCount.get() ||now()-startTime > config.getInitMaxWaitTimeMills()) {
                 client.start(config);
                 break;
+            }else {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    GLogger.error("GRest start config wait interrupted, {}",e);
+                }
             }
         }
     }
 
-    private boolean isAllCellInitRest() {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return true;
-    }
-
     @Override
     public void handle(GRestController restController, Map meta) {
-        registeredCount++;
+        registeredCount.addAndGet(1);
         if (restController.isValidController()) {
             this.client.registerGRestController(restController);
         }
     }
 
+    @Override
+    public void onMonitorListener(String cellId, MonitorMap monitorMap) {
+        expectedCellCount.addAndGet(1);
+    }
 }

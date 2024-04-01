@@ -1,13 +1,17 @@
 package org.grampus.core;
 
+import org.grampus.core.monitor.GMonitor;
 import org.grampus.log.GLogger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
-public class GService implements GCellController {
+public class GService implements GCellController, GMonitor {
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(getScheduledTheadPoolSize());
     private ExecutorService executorBlockingService = Executors.newCachedThreadPool();
     private String name;
@@ -84,17 +88,11 @@ public class GService implements GCellController {
         this.name = name;
     }
 
-
-//    @Override
-//    public void addTask(Runnable runnable) {
-//        this.context.submitTask(runnable);
-//    }
-
     public GTimer createTimer(Runnable runnable) {
         return new GTimer(runnable,(runner, time, timeUnit)->this.scheduledExecutorService.scheduleAtFixedRate(runner,0,time,timeUnit));
     }
 
-    public void addBlockingTask(Runnable runnable) {
+    public void submitBlockingTask(Runnable runnable) {
         this.executorBlockingService.submit(runnable);
     }
 
@@ -110,7 +108,7 @@ public class GService implements GCellController {
     }
 
     @Override
-    public void addAssertTask(Runnable runnable) {
+    public void submitAssertTask(Runnable runnable) {
         this.context.addAssertTask(runnable);
     }
 

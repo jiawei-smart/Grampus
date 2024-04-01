@@ -2,6 +2,7 @@ package org.grampus.core;
 
 import org.grampus.util.GStringUtil;
 
+import java.util.List;
 import java.util.Objects;
 
 public class GEvent {
@@ -9,10 +10,10 @@ public class GEvent {
     private String eventStem;
 
     public GEvent(String eventStr) {
-        String[] rowPointValues = GStringUtil.split(eventStr, GConstant.EVENT_SPLIT_CHAR);
-        this.service = rowPointValues[0];
-        if (rowPointValues.length > 1) {
-            this.eventStem = rowPointValues[1];
+        List<String> rowPointValues = GStringUtil.splitAsList(eventStr, GConstant.EVENT_SPLIT_CHAR);
+        this.service = rowPointValues.get(0);
+        if (rowPointValues.size() > 1) {
+            this.eventStem = rowPointValues.get(1);
         } else {
             this.eventStem = GConstant.DEFAULT_EVENT;
         }
