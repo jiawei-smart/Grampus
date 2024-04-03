@@ -23,6 +23,7 @@
         <module>grampus-util</module>
         <module>grampus-annotation</module>
         <module>grampus-swagger</module>
+        <module>grampus-fix</module>
     </modules>
 
     <dependencies>

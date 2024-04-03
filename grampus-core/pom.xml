@@ -60,7 +60,11 @@
             <groupId>org.grampus</groupId>
             <version>1.0.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.hdrhistogram</groupId>
+            <artifactId>HdrHistogram</artifactId>
+            <version>2.1.12</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>

@@ -11,7 +11,7 @@ public class GContext {
     private Map<String, Object> workflowConfig;
     public final GRouter router = new GRouter();
     private final List<GMonitor> serviceMonitorListeners = new ArrayList<>();
-    private final List<GMonitor> cellMonitorsListners = new ArrayList<>();
+    private final List<GMonitor> cellMonitorsListeners = new ArrayList<>();
     private GTester tester;
 
 
@@ -50,13 +50,13 @@ public class GContext {
     private void registerCellMonitors(Collection<GService> services) {
         services.forEach(service->{
             service.getCells().forEach((gEvent, cells)->{
-                this.cellMonitorsListners.addAll(cells);
+                this.cellMonitorsListeners.addAll(cells);
             });
         });
     }
 
     private void notifyCellMonitorListeners(GCell cell) {
-        this.cellMonitorsListners.forEach(cellMonitorsListner->cellMonitorsListner.onMonitorListener(cell.getId(),cell.monitorMap()));
+        this.cellMonitorsListeners.forEach(cellMonitorsListner->cellMonitorsListner.onMonitorListener(cell.getId(),cell.monitorMap()));
     }
 
     private void notifyServiceMonitorListeners(GService service) {

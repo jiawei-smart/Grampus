@@ -5,6 +5,8 @@ import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.env.EnvScalarConstructor;
+import org.yaml.snakeyaml.inspector.TrustedTagInspector;
+import org.yaml.snakeyaml.inspector.UnTrustedTagInspector;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,7 +22,7 @@ public class GYamlUtil {
         if(file.exists()){
             try {
                 InputStream inputStream = new FileInputStream(configYamlPath);
-                Yaml yaml = new Yaml(buildConstructor(Map.class));
+                Yaml yaml = new Yaml(buildConstructor());
                 return yaml.load(inputStream);
             } catch (FileNotFoundException e) {
                 GLogger.error("Failure to load yaml file: [{}], {}",configYaml,e);
@@ -36,7 +38,7 @@ public class GYamlUtil {
         String configYamlPath = GYamlUtil.class.getClassLoader().getResource(yamlFile).getPath();
         try {
             InputStream inputStream = new FileInputStream(configYamlPath);
-            Yaml yaml = new Yaml(buildConstructor(type));
+            Yaml yaml = new Yaml(buildConstructor());
             return yaml.loadAs(inputStream,type);
         } catch (FileNotFoundException e) {
             GLogger.error("Failure to load yaml file: [{}], with {}",yamlFile,e);
@@ -44,8 +46,10 @@ public class GYamlUtil {
         return null;
     }
 
-    private static <T> EnvScalarConstructor buildConstructor(Class<T> type) {
-        return new EnvScalarConstructor(new TypeDescription(Object.class),null,new LoaderOptions()){
+    private static <T> EnvScalarConstructor buildConstructor() {
+        LoaderOptions loaderOptions = new LoaderOptions();
+        loaderOptions.setTagInspector(new TrustedTagInspector());
+        return new EnvScalarConstructor(new TypeDescription(Object.class),null,loaderOptions){
             @Override
             public String getEnv(String key) {
                 String result = super.getEnv(key);

@@ -61,7 +61,7 @@ public class GAdaptor {
     }
 
 
-    public void publishMessage(String nextEvent, Object message) {
+    public void publishMessage(String nextEvent, Object message, Map<String, Object> meta) {
         if(nextEvent == null){
             nextEvent = this.event;
         }
@@ -70,10 +70,13 @@ public class GAdaptor {
             GMessage gMessage;
             if (message instanceof GMessage) {
                 gMessage = (GMessage)message;
-                gMessage.header.update(this.id);
+                gMessage.header.update(this.event, this.id);
             }else {
                 gMessage = new GMessage(this.id);
                 gMessage.setPayload(message);
+            }
+            if(meta != null && meta.size() > 0){
+                gMessage.meta(meta);
             }
             this.router.toMessageBus(nextPaths,gMessage);
         }

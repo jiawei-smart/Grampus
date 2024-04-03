@@ -21,7 +21,6 @@ public class GCell<T> implements GMonitor {
     private GCellController controller;
     private BlockingQueue<GMessage> messageQueue = new LinkedBlockingDeque<>();
     private Set<String> parallelConsumerTopics = new HashSet<>();
-    private MonitorMap monitorMap = new MonitorMap();
     private Long lastHeartbeatTimeCost = 0L;
     private boolean isRunning = true;
 
@@ -149,8 +148,13 @@ public class GCell<T> implements GMonitor {
     }
 
     public void onEvent(String event, Object message) {
-        this.adaptor.publishMessage(event, message);
+        this.onEvent(event, message,null);
     }
+
+    public void onEvent(String event, Object message, Map<String, Object> meta) {
+        this.adaptor.publishMessage(event, message, meta);
+    }
+
 
     public void onPlugin(String event, Object msg) {
         GMessage message = new GMessage(this.adaptor.getId());
@@ -200,9 +204,12 @@ public class GCell<T> implements GMonitor {
     public GRestStaticFilesSpec getRestStaticFilesSpec() {
         return null;
     }
-
-
     public String getId() {
         return adaptor.getId();
+    }
+    public Map meta(String key, Object value){
+        Map meta = new HashMap();
+        meta.put(key,value);
+        return meta;
     }
 }

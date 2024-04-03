@@ -82,6 +82,10 @@ public class GFileUtil {
         return getResourcesPath().toAbsolutePath().toString()+'/'+file;
     }
 
+    public static void createFolderInClasspath(String folder) {
+        new File(getResourcesAbsolutePath(),folder).mkdir();
+    }
+
     public String getClassLocation(Class clazz){
         CodeSource src = clazz.getProtectionDomain().getCodeSource();
         if (src != null) {

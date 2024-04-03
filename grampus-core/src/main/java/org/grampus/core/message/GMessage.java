@@ -1,5 +1,7 @@
 package org.grampus.core.message;
 
+import org.HdrHistogram.Histogram;
+
 import java.util.HashMap;
 import java.util.Map;
 
