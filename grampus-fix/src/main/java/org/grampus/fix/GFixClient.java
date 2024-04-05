@@ -8,13 +8,13 @@ import quickfix.*;
 import static quickfix.SessionFactory.ACCEPTOR_CONNECTION_TYPE;
 import static quickfix.SessionFactory.SETTING_CONNECTION_TYPE;
 
-public class QFixClient implements GClient<QFixOptions>, Application {
-    private QFixMsgHandler handler;
+public class GFixClient implements GClient<GFixOptions>, Application {
+    private GFixMsgHandler handler;
     private SocketAcceptor acceptor;
     private SocketInitiator initiator;
 
     @Override
-    public boolean start(QFixOptions config) {
+    public boolean start(GFixOptions config) {
         if (config == null) {
             GLogger.error("Quickfix client config is null");
             return false;
@@ -113,11 +113,11 @@ public class QFixClient implements GClient<QFixOptions>, Application {
         this.handler.fromApp(message, sessionID);
     }
 
-    public QFixMsgHandler getHandler() {
+    public GFixMsgHandler getHandler() {
         return handler;
     }
 
-    public void setHandler(QFixMsgHandler handler) {
+    public void setHandler(GFixMsgHandler handler) {
         this.handler = handler;
     }
 }

@@ -2,7 +2,7 @@ package org.grampus.fix;
 
 import quickfix.*;
 
-public interface QFixMsgHandler {
+public interface GFixMsgHandler {
     void onCreate(SessionID sessionID);
     void onLogon(SessionID sessionID);
 

@@ -7,7 +7,7 @@ import quickfix.*;
 
 import java.util.Map;
 
-public class QFixCell extends GCell {
+public class GFixCell extends GCell {
     public static final String ON_CREATE = "onCreate";
     public static final String ON_LOGON = "onLogon";
     public static final String ON_LOGOUT = "onLogout";
@@ -18,19 +18,19 @@ public class QFixCell extends GCell {
 
     public static final String SESSION_ID = "sessionID";
 
-    private QFixClient client;
+    private GFixClient client;
 
     @Override
     public void start() {
         onStatus("Quickfix init", false);
-        QFixOptions qFixOptions = this.getController().getConfig(QFixOptions.CONFIG_KEY, QFixOptions.class);
-        if (qFixOptions == null && GFileUtil.isExistedInClasspath(QFixOptions.DEFAULT_CONFIG_YAML)) {
-            qFixOptions = getController().loadConfig(QFixOptions.DEFAULT_CONFIG_YAML, QFixOptions.class);
+        GFixOptions gFixOptions = this.getController().getConfig(GFixOptions.CONFIG_KEY, GFixOptions.class);
+        if (gFixOptions == null && GFileUtil.isExistedInClasspath(GFixOptions.DEFAULT_CONFIG_YAML)) {
+            gFixOptions = getController().loadConfig(GFixOptions.DEFAULT_CONFIG_YAML, GFixOptions.class);
         }
-        if (qFixOptions != null && this.client == null) {
-            this.client = new QFixClient();
+        if (gFixOptions != null && this.client == null) {
+            this.client = new GFixClient();
         }
-        this.client.setHandler(new QFixMsgHandler() {
+        this.client.setHandler(new GFixMsgHandler() {
             @Override
             public void onCreate(SessionID sessionID) {
                 GLogger.info("Quickfix session create, {}", sessionID);
@@ -73,7 +73,7 @@ public class QFixCell extends GCell {
                 onEvent(FROM_APP, message, meta(SESSION_ID, sessionID));
             }
         });
-        onStatus("Quickfix init", this.client.start(qFixOptions));
+        onStatus("Quickfix init", this.client.start(gFixOptions));
     }
 
     @Override

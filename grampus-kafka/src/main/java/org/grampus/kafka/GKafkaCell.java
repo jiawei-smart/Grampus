@@ -1,0 +1,45 @@
+package org.grampus.kafka;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.grampus.core.GCell;
+import org.grampus.log.GLogger;
+
+import java.util.Map;
+
+public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
+    public static final String FROM_KAFKA = "FROM_KAFKA";
+
+    public static final String KAFKA_PRODUCER_KEY = "KAFKA_PRODUCER_KEY";
+    public static final String KAFKA_CONFIG_YAML = "kafkaConfig.yaml";
+    private GKafkaClient client;
+
+    @Override
+    public void start() {
+        onStatus("kafka init",false);
+        this.client = new GKafkaClient(this::onConsumerRecord);
+        GKafkaOptions config = getController().getConfig(GKafkaOptions.KAFKA_CONFIG,GKafkaOptions.class);
+        if(config == null){
+            config = getController().loadConfig(KAFKA_CONFIG_YAML,GKafkaOptions.class);
+        }
+        this.client.start(config);
+        onStatus("kafka init",true);
+    }
+
+    @Override
+    public void onConsumerRecord(ConsumerRecord record) {
+        onEvent(FROM_KAFKA, record.value());
+    }
+
+    @Override
+    public void handle(T payload, Map meta) {
+        if(this.client != null){
+            this.client.send(this.getProducerKey(payload,meta),payload);
+        }else {
+            GLogger.debug("kafka client as null, failure to send message {}",payload);
+        }
+    }
+
+    public Object getProducerKey(T payload, Map meta) {
+        return meta.get(KAFKA_PRODUCER_KEY);
+    }
+}
