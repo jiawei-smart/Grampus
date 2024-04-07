@@ -30,9 +30,6 @@ public class GFixCell extends GCell {
     public void start() {
         onStatus("Quickfix init", false);
         GFixOptions gFixOptions = (GFixOptions) getConfig(GFixOptions.class);
-        if (gFixOptions == null && GFileUtil.isExistedInClasspath(DEFAULT_CONFIG_YAML)) {
-            gFixOptions = getController().loadConfig(DEFAULT_CONFIG_YAML, GFixOptions.class);
-        }
         if (gFixOptions != null && this.client == null) {
             this.client = new GFixClient();
         }
@@ -62,13 +59,13 @@ public class GFixCell extends GCell {
             }
 
             @Override
-            public void fromAdmin(Message message, SessionID sessionID)  {
+            public void fromAdmin(Message message, SessionID sessionID) {
                 GLogger.info("Quickfix session [{}],fromAdmin [{}]", sessionID, message);
                 onEvent(FROM_ADMIN, message, meta(SESSION_ID, sessionID));
             }
 
             @Override
-            public void toApp(Message message, SessionID sessionID){
+            public void toApp(Message message, SessionID sessionID) {
                 GLogger.info("Quickfix session [{}],toApp [{}]", sessionID, message);
                 onEvent(TO_APP, message, meta(SESSION_ID, sessionID));
             }
@@ -84,7 +81,7 @@ public class GFixCell extends GCell {
 
     @Override
     public GRestGroupSpec getRestGroupSpec() {
-        return new GRestGroupSpec(getEvent(),null);
+        return new GRestGroupSpec(getEvent(), null);
     }
 
     @Override
@@ -103,37 +100,42 @@ public class GFixCell extends GCell {
         return CONFIG_KEY;
     }
 
+    @Override
+    public String getConfigFileKey() {
+        return DEFAULT_CONFIG_YAML;
+    }
+
     @GRestGet(path = "/getAllSessions")
-    public GRestResp getAllFixSessions(){
+    public GRestResp getAllFixSessions() {
         try {
             List<String> sessionIds = this.client.getAllSessions();
             GLogger.info("GRest request to get all FIX session");
             return GRestResp.responseResp(sessionIds);
         } catch (Exception e) {
-            GLogger.error("GFIXClient failure to get all fix sessions ids, with {}",e);
-           return GRestResp.errorResp("failure to get all fix sessions ids");
+            GLogger.error("GFIXClient failure to get all fix sessions ids, with {}", e);
+            return GRestResp.errorResp("failure to get all fix sessions ids");
         }
     }
 
     @GRestGet(path = "/closeSession")
-    public GRestResp closeSession(@GRestParam(name = "sessionIDStr") String sessionID){
+    public GRestResp closeSession(@GRestParam(name = "sessionIDStr") String sessionID) {
         try {
-            if(this.client.stopSession(sessionID)){
+            if (this.client.stopSession(sessionID)) {
                 return GRestResp.responseResp("close session successfully");
             }
         } catch (IOException e) {
-            GLogger.error("failure to close session [{}], with {}",sessionID,e);
+            GLogger.error("failure to close session [{}], with {}", sessionID, e);
         }
         return GRestResp.errorResp("close session failed");
     }
 
     @GRestPost(path = "/sendMessage")
-    public GRestResp sendMessage(@GRestParam(name = "sessionIdStr")String sessionIdStr, @GRestBody String message){
+    public GRestResp sendMessage(@GRestParam(name = "sessionIdStr") String sessionIdStr, @GRestBody String message) {
         try {
             this.client.sendMessage(sessionIdStr, message);
             return GRestResp.responseResp("send message successfully");
         } catch (InvalidMessage e) {
-            return GRestResp.errorResp("failure to send message "+e);
+            return GRestResp.errorResp("failure to send message " + e);
         }
     }
 }
