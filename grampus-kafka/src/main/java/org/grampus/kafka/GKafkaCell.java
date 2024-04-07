@@ -18,9 +18,6 @@ public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
         onStatus("kafka init",false);
         this.client = new GKafkaClient(this::onConsumerRecord);
         GKafkaOptions config = getConfig(GKafkaOptions.class);
-        if(config == null){
-            config = getController().loadConfig(KAFKA_CONFIG_YAML,GKafkaOptions.class);
-        }
         this.client.start(config);
         onStatus("kafka init",true);
     }
@@ -46,5 +43,10 @@ public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
     @Override
     public String getConfigKey() {
         return KAFKA_CONFIG;
+    }
+
+    @Override
+    public String getConfigFileKey() {
+        return KAFKA_CONFIG_YAML;
     }
 }
