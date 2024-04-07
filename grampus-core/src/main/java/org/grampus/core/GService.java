@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class GService implements GCellController, GMonitor {
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(getScheduledTheadPoolSize());
     private ExecutorService executorBlockingService = Executors.newCachedThreadPool();
+    private ExecutorService executorService = Executors.newCachedThreadPool();
     private String name;
     private GContext context;
     private Map<GEvent, List<GCell>> cells = new HashMap<>();
@@ -108,9 +109,13 @@ public class GService implements GCellController, GMonitor {
     public GTimer createTimer(Runnable runnable) {
         return new GTimer(runnable,(runner, time, timeUnit)->this.scheduledExecutorService.scheduleAtFixedRate(runner,0,time,timeUnit));
     }
-
+    @Override
     public void submitBlockingTask(Runnable runnable) {
         this.executorBlockingService.submit(runnable);
+    }
+    @Override
+    public void submitTask(Runnable runnable) {
+        this.executorService.submit(runnable);
     }
 
     @Override

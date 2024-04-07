@@ -58,7 +58,7 @@ public class GFileUtil {
         } catch (URISyntaxException e) {
             GLogger.error("GFileUtil: failure to get resources folder, {}",e);
         }
-        return Path.of("");
+        return null;
     }
 
     public static Path getResourcesPath(String file) {
@@ -71,7 +71,7 @@ public class GFileUtil {
         } catch (URISyntaxException e) {
             GLogger.error("GFileUtil: failure to get resources folder, {}",e);
         }
-        return Path.of("");
+        return null;
     }
 
     public static String getResourcesAbsolutePath()  {

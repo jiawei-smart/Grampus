@@ -2,6 +2,7 @@ package org.grampus.core.test;
 
 import org.grampus.core.GCell;
 import org.grampus.core.GWorkflow;
+import org.grampus.core.message.GMessageHeader;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -23,7 +24,7 @@ public class GWorkflowTest {
                         })
                         .cell("E0", new GCell(){
                             @Override
-                            public Object handle(String from, Object payload, Map meta) {
+                            public Object handle(GMessageHeader header, Object payload, Map meta) {
                                 assertTask(()->Assert.assertEquals("message", payload));
                                 return payload+"->E0_P0";
                             }

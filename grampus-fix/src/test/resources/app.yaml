@@ -1,7 +1,7 @@
 INIT_SERVICE:
-  fixConfig: !!org.grampus.fix.QFixOptions
+  fixConfig: !!org.grampus.fix.GFixOptions
     quickFixConfigFile: initiator.cfg
 
 ACCEPT_SERVICE:
-  fixConfig: !!org.grampus.fix.QFixOptions
+  fixConfig: !!org.grampus.fix.GFixOptions
     quickFixConfigFile: acceptor.cfg

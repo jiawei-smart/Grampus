@@ -24,7 +24,7 @@ public class GMessageHeader {
 
     public void update(String event, String cellId){
         if(this.id == null){
-            this.id = cellId+"_"+UUID.randomUUID();
+            this.id = cellId+"_"+GDateTimeUtil.now();
         }
         this.history.add(cellId);
         updateTimestamp(cellId,event);
@@ -53,5 +53,9 @@ public class GMessageHeader {
 
     public static void achieveHistogram(PrintStream printStream){
         histogram.outputPercentileDistribution(printStream,1000.0);
+    }
+
+    public String getId() {
+        return id;
     }
 }

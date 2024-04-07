@@ -11,6 +11,16 @@ public class GRestGroupSpec {
         this.description = restGroup.description();
     }
 
+    public GRestGroupSpec(String id, String description) {
+        this.id = id;
+        this.description = description;
+    }
+
+    public GRestGroupSpec(String id) {
+        this.id = id;
+        this.description = "";
+    }
+
     public String getId() {
         return id;
     }

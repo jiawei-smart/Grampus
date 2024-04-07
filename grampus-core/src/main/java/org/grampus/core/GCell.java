@@ -1,9 +1,12 @@
 package org.grampus.core;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Metrics;
 import org.grampus.core.annotation.rest.spec.GRestGroupSpec;
 import org.grampus.core.annotation.rest.spec.GRestMethodSpec;
 import org.grampus.core.annotation.rest.spec.GRestStaticFilesSpec;
 import org.grampus.core.message.GMessage;
+import org.grampus.core.message.GMessageHeader;
 import org.grampus.core.message.GMsgType;
 import org.grampus.core.monitor.GMonitor;
 import org.grampus.core.monitor.GMonitorMap;
@@ -24,6 +27,9 @@ public class GCell<T> implements GMonitor {
     private Long lastHeartbeatTimeCost = 0L;
     private boolean isRunning = true;
     private GMonitorMap monitorMap;
+
+    private Counter receivedMsgCount;
+    private Counter processedMsgCount;
     public GCell() {
     }
 
@@ -43,6 +49,7 @@ public class GCell<T> implements GMonitor {
         adaptor.consume((message) -> {
             GMsgType msgType = message.header.msgType();
             if (msgType == GMsgType.BUSINESS_MESSAGE) {
+                receivedMsgCount.increment();
                 offset(CELL_HANDLE_ACTION.DATA_PUSH, message);
             } else if (msgType == GMsgType.HEARTBEAT_MESSAGE) {
                 fromHeartbeat(message);
@@ -53,6 +60,8 @@ public class GCell<T> implements GMonitor {
         monitorMap = new GMonitorMap(this);
         setParallel(options.getParallel());
         initMonitorMap();
+        receivedMsgCount = Metrics.counter("cell",getId(),"received.message.count");
+        processedMsgCount = Metrics.counter("cell",getId(),"processed.message.count");
     }
 
     private void initMonitorMap() {
@@ -131,12 +140,13 @@ public class GCell<T> implements GMonitor {
                         this.handle(message);
                     } catch (Exception e) {
                         GLogger.error("failure to handle message [{}], with [{}]", message, e);
+                    }finally {
+                        processedMsgCount.count();
                     }
-                }, false);
+                }, isWorker());
             }
         }
     }
-
     private void startHeartbeat() {
         GMessage message = GMessage.newHbMessage().setPayload(now());
         this.adaptor.toMessageBus(this.adaptor.getId(), message);
@@ -149,9 +159,15 @@ public class GCell<T> implements GMonitor {
     }
 
     protected void handle(GMessage message) {
-        Object out = handle(message.header().getLastEvent(), (T) message.payload(), message.meta());
-        message.setPayload(out);
-        onEvent(null, message);
+        Object out = handle(message.header(), (T) message.payload(), message.meta());
+        if(out != null){
+            message.setPayload(out);
+            onEvent(message);
+        }
+    }
+
+    public void onEvent(Object message) {
+        this.onEvent(null, message,null);
     }
 
     public void onEvent(String event, Object message) {
@@ -171,9 +187,9 @@ public class GCell<T> implements GMonitor {
         this.adaptor.toMessageBus(GAdaptor.buildAdaptorId(GConstant.PLUGIN_SERVICE, event), message);
     }
 
-    public Object handle(String from, T payload, Map meta) {
+    public Object handle(GMessageHeader header, T payload, Map meta) {
         handle(payload, meta);
-        return payload;
+        return null;
     }
 
     public void handle(T payload, Map meta) {
@@ -216,6 +232,10 @@ public class GCell<T> implements GMonitor {
     public String getId() {
         return adaptor.getId();
     }
+    public String getEvent() {
+        return adaptor.getEvent();
+    }
+
     public Map meta(String key, Object value){
         Map meta = new HashMap();
         meta.put(key,value);
@@ -224,10 +244,16 @@ public class GCell<T> implements GMonitor {
 
     public String getConfigKey(){return null;}
 
+    public String getConfigFileKey(){return null;}
+
     public <O> O getConfig(Class<O> type){
         String configKey= this.getConfigKey();
         if(this.getConfigKey() != null){
             return this.controller.getConfig(configKey,type);
+        }
+        String configFile = this.getConfigFileKey();
+        if(configFile != null){
+            return this.controller.loadConfig(configFile,type);
         }
         return null;
     }
@@ -235,6 +261,10 @@ public class GCell<T> implements GMonitor {
     @Override
     public GMonitorMap monitorMap() {
         return monitorMap;
+    }
+
+    public boolean isWorker() {
+        return false;
     }
 
     @Override

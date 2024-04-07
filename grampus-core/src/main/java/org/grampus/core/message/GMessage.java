@@ -8,7 +8,6 @@ public class GMessage<T> {
     private final Map<String, Object> meta = new HashMap<>();
     private T payload;
 
-
     private GMessage() {
         this.header = new GMessageHeader(GMsgType.BUSINESS_MESSAGE);
     }
@@ -48,6 +47,10 @@ public class GMessage<T> {
     public GMessage setPayload(T payload) {
         this.payload = payload;
         return this;
+    }
+
+    public String messageId(){
+        return this.header.getId();
     }
 
     public GMessage clone(){

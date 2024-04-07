@@ -1,10 +1,14 @@
 package org.grampus.fix;
 
 import org.grampus.core.GCell;
+import org.grampus.core.annotation.rest.*;
+import org.grampus.core.annotation.rest.spec.GRestGroupSpec;
 import org.grampus.log.GLogger;
 import org.grampus.util.GFileUtil;
 import quickfix.*;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 public class GFixCell extends GCell {
@@ -79,6 +83,11 @@ public class GFixCell extends GCell {
     }
 
     @Override
+    public GRestGroupSpec getRestGroupSpec() {
+        return new GRestGroupSpec(getEvent(),null);
+    }
+
+    @Override
     public void handle(Object payload, Map meta) {
         if (this.client != null) {
             if (payload instanceof String) {
@@ -92,5 +101,39 @@ public class GFixCell extends GCell {
     @Override
     public String getConfigKey() {
         return CONFIG_KEY;
+    }
+
+    @GRestGet(path = "/getAllSessions")
+    public GRestResp getAllFixSessions(){
+        try {
+            List<String> sessionIds = this.client.getAllSessions();
+            GLogger.info("GRest request to get all FIX session");
+            return GRestResp.responseResp(sessionIds);
+        } catch (Exception e) {
+            GLogger.error("GFIXClient failure to get all fix sessions ids, with {}",e);
+           return GRestResp.errorResp("failure to get all fix sessions ids");
+        }
+    }
+
+    @GRestGet(path = "/closeSession")
+    public GRestResp closeSession(@GRestParam(name = "sessionIDStr") String sessionID){
+        try {
+            if(this.client.stopSession(sessionID)){
+                return GRestResp.responseResp("close session successfully");
+            }
+        } catch (IOException e) {
+            GLogger.error("failure to close session [{}], with {}",sessionID,e);
+        }
+        return GRestResp.errorResp("close session failed");
+    }
+
+    @GRestPost(path = "/sendMessage")
+    public GRestResp sendMessage(@GRestParam(name = "sessionIdStr")String sessionIdStr, @GRestBody String message){
+        try {
+            this.client.sendMessage(sessionIdStr, message);
+            return GRestResp.responseResp("send message successfully");
+        } catch (InvalidMessage e) {
+            return GRestResp.errorResp("failure to send message "+e);
+        }
     }
 }

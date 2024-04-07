@@ -5,6 +5,12 @@ import org.grampus.log.GLogger;
 import org.grampus.util.GStringUtil;
 import quickfix.*;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
+
 import static quickfix.SessionFactory.ACCEPTOR_CONNECTION_TYPE;
 import static quickfix.SessionFactory.SETTING_CONNECTION_TYPE;
 
@@ -119,5 +125,30 @@ public class GFixClient implements GAPIClient<GFixOptions>, Application {
 
     public void setHandler(GFixMsgHandler handler) {
         this.handler = handler;
+    }
+
+    public List<String> getAllSessions() throws Exception {
+        Field field = Session.class.getDeclaredField("sessions");
+        field.setAccessible(true);
+        ConcurrentMap<SessionID, Session> sessions = (ConcurrentMap<SessionID, Session>) field.get(null);
+        return sessions.keySet().stream().map(sessionID -> sessionID.toString()).collect(Collectors.toList());
+    }
+
+    public boolean stopSession(String sessionIDStr) throws IOException {
+        SessionID sessionID = new SessionID(sessionIDStr);
+        Session session = Session.lookupSession(sessionID);
+        session.close();
+        return true;
+    }
+
+    public boolean sendMessage(String sessionIdStr, String message) throws InvalidMessage {
+        SessionID sessionID = new SessionID(sessionIdStr);
+        Session session = Session.lookupSession(sessionID);
+        if(session != null){
+            session.send(MessageUtils.parse(session,message));
+            return true;
+        }else {
+            throw new RuntimeException("cannot found the session "+sessionIdStr);
+        }
     }
 }

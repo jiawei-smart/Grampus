@@ -34,4 +34,12 @@ public class GRestResp {
     public boolean hasError(){
         return payload.containsKey(ERROR);
     }
+
+    public static GRestResp errorResp(Object errorInfo){
+        return  newInstance().error(errorInfo);
+    }
+
+    public static GRestResp responseResp(Object result){
+        return newInstance().response(result);
+    }
 }

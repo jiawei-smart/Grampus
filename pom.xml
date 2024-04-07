@@ -24,6 +24,7 @@
         <module>grampus-swagger</module>
         <module>grampus-fix</module>
         <module>grampus-kafka</module>
+        <module>grampus-replay</module>
     </modules>
 
     <dependencies>
