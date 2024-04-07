@@ -8,6 +8,8 @@ import quickfix.*;
 import java.util.Map;
 
 public class GFixCell extends GCell {
+    public static final String CONFIG_KEY = "fixConfig";
+    public static final String DEFAULT_CONFIG_YAML = "fixConfig.yaml";
     public static final String ON_CREATE = "onCreate";
     public static final String ON_LOGON = "onLogon";
     public static final String ON_LOGOUT = "onLogout";
@@ -23,9 +25,9 @@ public class GFixCell extends GCell {
     @Override
     public void start() {
         onStatus("Quickfix init", false);
-        GFixOptions gFixOptions = this.getController().getConfig(GFixOptions.CONFIG_KEY, GFixOptions.class);
-        if (gFixOptions == null && GFileUtil.isExistedInClasspath(GFixOptions.DEFAULT_CONFIG_YAML)) {
-            gFixOptions = getController().loadConfig(GFixOptions.DEFAULT_CONFIG_YAML, GFixOptions.class);
+        GFixOptions gFixOptions = (GFixOptions) getConfig(GFixOptions.class);
+        if (gFixOptions == null && GFileUtil.isExistedInClasspath(DEFAULT_CONFIG_YAML)) {
+            gFixOptions = getController().loadConfig(DEFAULT_CONFIG_YAML, GFixOptions.class);
         }
         if (gFixOptions != null && this.client == null) {
             this.client = new GFixClient();
@@ -85,5 +87,10 @@ public class GFixCell extends GCell {
                 this.client.sendMessage((Message) payload);
             }
         }
+    }
+
+    @Override
+    public String getConfigKey() {
+        return CONFIG_KEY;
     }
 }

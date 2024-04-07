@@ -6,7 +6,7 @@ import org.grampus.core.annotation.rest.spec.GRestStaticFilesSpec;
 import org.grampus.core.message.GMessage;
 import org.grampus.core.message.GMsgType;
 import org.grampus.core.monitor.GMonitor;
-import org.grampus.core.monitor.MonitorMap;
+import org.grampus.core.monitor.GMonitorMap;
 import org.grampus.log.GLogger;
 import org.grampus.util.GDateTimeUtil;
 
@@ -23,7 +23,7 @@ public class GCell<T> implements GMonitor {
     private Set<String> parallelConsumerTopics = new HashSet<>();
     private Long lastHeartbeatTimeCost = 0L;
     private boolean isRunning = true;
-
+    private GMonitorMap monitorMap;
     public GCell() {
     }
 
@@ -50,7 +50,15 @@ public class GCell<T> implements GMonitor {
                 fromAdmin(message);
             }
         });
+        monitorMap = new GMonitorMap(this);
         setParallel(options.getParallel());
+        initMonitorMap();
+    }
+
+    private void initMonitorMap() {
+        this.monitorMap.put(GConstant.MONITOR_CELL_BATCH_SIZE,this.options.getBatchSize());
+        this.monitorMap.put(GConstant.MONITOR_CELL_ID,this.getId());
+        this.monitorMap.put(GConstant.MONITOR_CELL_PNO_COUNT,this.options.getParallel());
     }
 
     void cellStart() {
@@ -65,7 +73,7 @@ public class GCell<T> implements GMonitor {
     }
 
     private void fromHeartbeat(GMessage message) {
-        lastHeartbeatTimeCost = now() - (Long) message.getPayload();
+        lastHeartbeatTimeCost = now() - (Long) message.payload();
         if (lastHeartbeatTimeCost > options.getHeartbeatMsgTimeoutMills()) {
             GLogger.warn("Cell [{}] heartbeat timeout [{}]", this.adaptor.getId(), lastHeartbeatTimeCost);
         }
@@ -130,8 +138,7 @@ public class GCell<T> implements GMonitor {
     }
 
     private void startHeartbeat() {
-        GMessage message = new GMessage(this.adaptor.getId(), GMsgType.HEARTBEAT_MESSAGE);
-        message.setPayload(now());
+        GMessage message = GMessage.newHbMessage().setPayload(now());
         this.adaptor.toMessageBus(this.adaptor.getId(), message);
     }
 
@@ -142,7 +149,7 @@ public class GCell<T> implements GMonitor {
     }
 
     protected void handle(GMessage message) {
-        Object out = handle(message.getHeader().getSourceCellId(), (T) message.getPayload(), message.meta());
+        Object out = handle(message.header().getLastEvent(), (T) message.payload(), message.meta());
         message.setPayload(out);
         onEvent(null, message);
     }
@@ -152,13 +159,15 @@ public class GCell<T> implements GMonitor {
     }
 
     public void onEvent(String event, Object message, Map<String, Object> meta) {
-        this.adaptor.publishMessage(event, message, meta);
+        if(!(message instanceof GMessage)){
+            message = GMessage.newBusinessMessage().setPayload(message).meta(meta);
+        }
+        this.adaptor.publishMessage(event, (GMessage) message);
     }
 
 
     public void onPlugin(String event, Object msg) {
-        GMessage message = new GMessage(this.adaptor.getId());
-        message.setPayload(msg);
+        GMessage message = GMessage.newBusinessMessage().setPayload(msg);
         this.adaptor.toMessageBus(GAdaptor.buildAdaptorId(GConstant.PLUGIN_SERVICE, event), message);
     }
 
@@ -211,5 +220,26 @@ public class GCell<T> implements GMonitor {
         Map meta = new HashMap();
         meta.put(key,value);
         return meta;
+    }
+
+    public String getConfigKey(){return null;}
+
+    public <O> O getConfig(Class<O> type){
+        String configKey= this.getConfigKey();
+        if(this.getConfigKey() != null){
+            return this.controller.getConfig(configKey,type);
+        }
+        return null;
+    }
+
+    @Override
+    public GMonitorMap monitorMap() {
+        return monitorMap;
+    }
+
+    @Override
+    public void monitor(GMonitorMap monitorMap) {
+        this.monitorMap.put(GConstant.MONITOR_CELL_MESSAGE_QUEUE_SIZE,this.messageQueue.size());
+        this.monitorMap.put(GConstant.MONITOR_CELL_LAST_HEARTBEAT_LATENCY,lastHeartbeatTimeCost);
     }
 }

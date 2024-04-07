@@ -1,6 +1,6 @@
 package org.grampus.core;
 
-import org.grampus.core.monitor.GMonitor;
+import org.grampus.core.monitor.GMonitorSupervisor;
 import org.grampus.util.GYamlUtil;
 import org.grampus.log.GLogger;
 
@@ -10,8 +10,9 @@ public class GContext {
 
     private Map<String, Object> workflowConfig;
     public final GRouter router = new GRouter();
-    private final List<GMonitor> serviceMonitorListeners = new ArrayList<>();
-    private final List<GMonitor> cellMonitorsListeners = new ArrayList<>();
+
+    private final GMonitorSupervisor servicesSupervisor = new GMonitorSupervisor();
+    private final GMonitorSupervisor cellsSupervisor = new GMonitorSupervisor();
     private GTester tester;
 
 
@@ -24,69 +25,82 @@ public class GContext {
         }
     }
 
-    public void start(Map<String, GService> services, List<String> chains) {
-        registerServiceMonitors(services);
+    public void start(Collection<GService> services, List<String> chains) {
         router.parseWorkflowChain(chains);
-        services.values().forEach(service->{
-            service.initService();
-            notifyServiceMonitorListeners(service);
-        });
-        registerCellMonitors(services.values());
+        initServicesSupervisor(services);
+        servicesBeforeStart(services);
+        initCellsSupervisor(services);
         router.parseServiceEventChain(services);
-        services.values().forEach(service->{
-            service.initCells();
-            service.getCells().forEach((gEvent,cells)->{
-                cells.forEach(cell->notifyCellMonitorListeners(cell));
-            });
-        });
-        services.values().forEach(GService::startCells);
+        servicesStart(services);
+        servicesCellsStart(services);
+        this.servicesSupervisor.startUpdateMonitorMap();
+        this.cellsSupervisor.startUpdateMonitorMap();
         if(this.tester != null){
-            GLogger.info("==Grampus start test model==");
+            GLogger.info(GConstant.GRAMPUS_TEST_LOGO);
             this.tester.start();
+        }else {
+            printInfo(services);
         }
-        printInfo(services);
     }
 
-    private void registerCellMonitors(Collection<GService> services) {
+    private void servicesCellsStart(Collection<GService> services) {
+        services.forEach(GService::startCells);
+    }
+
+    private void servicesStart(Collection<GService> services) {
+        services.forEach(service->{
+            service.start();
+            service.getCells().forEach((gEvent,cells)->{
+                cells.forEach(cell->this.cellsSupervisor.broadcast(cell.getId(),cell.monitorMap()));
+            });
+        });
+    }
+
+    private void initCellsSupervisor(Collection<GService> services) {
         services.forEach(service->{
             service.getCells().forEach((gEvent, cells)->{
-                this.cellMonitorsListeners.addAll(cells);
+                cells.forEach(cell->this.cellsSupervisor.addMonitor(cell));
             });
         });
     }
 
-    private void notifyCellMonitorListeners(GCell cell) {
-        this.cellMonitorsListeners.forEach(cellMonitorsListner->cellMonitorsListner.onMonitorListener(cell.getId(),cell.monitorMap()));
-    }
-
-    private void notifyServiceMonitorListeners(GService service) {
-        this.serviceMonitorListeners.forEach(serviceMonitorListener->serviceMonitorListener.onMonitorListener(service.getName(),service.monitorMap()));
-    }
-
-    private void registerServiceMonitors(Map<String, GService> services) {
-        services.values().forEach(service->{
-            serviceMonitorListeners.add(service);
+    private void servicesBeforeStart(Collection<GService> services) {
+        services.forEach(service->{
+            service.beforeStart();
+            this.servicesSupervisor.broadcast(service.getName(), service.monitorMap());
         });
     }
 
-    private void printInfo(Map<String, GService> services) {
+    private void initServicesSupervisor(Collection<GService> services) {
+        services.forEach(service->this.servicesSupervisor.addMonitor(service));
+    }
+
+    private void printInfo(Collection<GService> services) {
+        GLogger.info(GConstant.GRAMPUS_LOGO);
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("\n");
-        services.forEach((serviceName, gService) -> {
-            stringBuilder.append("service: ["+serviceName+"]").append("\n");
+        stringBuilder.append("\n========================== Workflow Info =============================\n\n");
+        stringBuilder.append("## SERVICE: \n");
+        services.forEach((gService) -> {
+            stringBuilder.append("   -*- service: ["+gService.getName()+"]").append("\n");
             gService.getCells().forEach((event, gCells) -> {
-                stringBuilder.append("  event:"+event.getEventStem()).append("\n");
+                stringBuilder.append("       -- event: "+event.getEventStem()).append("  >>  cells: [");
                 gCells.forEach(cell->{
-                    stringBuilder.append("  --").append(cell.getId()).append("\n");
+                    stringBuilder.append(cell.getId()).append(", ");
                 });
+                stringBuilder.delete(stringBuilder.length()-2,stringBuilder.length());
+                stringBuilder.append("]\n");
             });
         });
+        stringBuilder.append("\n## CHAINS: \n");
+        this.router.getChainsEventTable().forEach((sourceEvent,targetEvents)->{
+            stringBuilder.append("   -*- "+sourceEvent+" => [");
+            targetEvents.forEach(event->stringBuilder.append(event+", "));
+            stringBuilder.delete(stringBuilder.length()-2,stringBuilder.length());
+            stringBuilder.append("]\n");
+        });
+        stringBuilder.append("\n=====================================================================\n");
         GLogger.info(stringBuilder.toString());
     }
-
-//    public Future submitTask(Runnable runnable){
-//        return this.executorService.submit(runnable);
-//    }
 
     public Map<Object, Object> getServiceConfig(String name) {
         return (Map<Object, Object>) workflowConfig.get(name);

@@ -7,17 +7,17 @@ import org.grampus.log.GLogger;
 import java.util.Map;
 
 public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
-    public static final String FROM_KAFKA = "FROM_KAFKA";
-
-    public static final String KAFKA_PRODUCER_KEY = "KAFKA_PRODUCER_KEY";
     public static final String KAFKA_CONFIG_YAML = "kafkaConfig.yaml";
+    public static final String KAFKA_CONFIG = "kafkaConfig";
+    public static final String FROM_KAFKA = "FROM_KAFKA";
+    public static final String KAFKA_PRODUCER_KEY = "KAFKA_PRODUCER_KEY";
     private GKafkaClient client;
 
     @Override
     public void start() {
         onStatus("kafka init",false);
         this.client = new GKafkaClient(this::onConsumerRecord);
-        GKafkaOptions config = getController().getConfig(GKafkaOptions.KAFKA_CONFIG,GKafkaOptions.class);
+        GKafkaOptions config = getConfig(GKafkaOptions.class);
         if(config == null){
             config = getController().loadConfig(KAFKA_CONFIG_YAML,GKafkaOptions.class);
         }
@@ -41,5 +41,10 @@ public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
 
     public Object getProducerKey(T payload, Map meta) {
         return meta.get(KAFKA_PRODUCER_KEY);
+    }
+
+    @Override
+    public String getConfigKey() {
+        return KAFKA_CONFIG;
     }
 }

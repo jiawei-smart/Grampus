@@ -1,15 +1,10 @@
 package org.grampus.core.rest;
 
-import org.grampus.core.client.GClientConfig;
+import org.grampus.core.client.GAPIConfig;
 import org.grampus.swagger.GSwaggerOptions;
 import org.grampus.util.GStringUtil;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-public class GRestOptions implements GClientConfig {
-    public static final String GREST_CONFIG_KEY = "restConfig";
-
+public class GRestOptions implements GAPIConfig {
     private String host;
     private Integer port;
 
@@ -52,11 +47,6 @@ public class GRestOptions implements GClientConfig {
 
     public void setSwaggerOptions(GSwaggerOptions swaggerOptions) {
         this.swaggerOptions = swaggerOptions;
-    }
-
-    @Override
-    public String getConfigKey() {
-        return GREST_CONFIG_KEY;
     }
 
     public Long getInitMaxWaitTimeMills() {

@@ -21,7 +21,7 @@ public class GEvent {
 
     public void initDefaultEventListener(GAdaptor adaptor) {
         adaptor.consume(message -> {
-            adaptor.publishMessage(null, message,null);
+            adaptor.publishMessage(null, message);
         }, false);
     }
 

@@ -15,6 +15,7 @@ public class GConstant {
     public static final String REST_PLUGIN = "REST_PLUGIN";
     public static final String MONITOR_SERVICE_START_TIME = "service.start.time";
     public static final String MONITOR_SERVICE_NAME = "service.name";
+    public static final String MONITOR_SERVICE_INCLUDED_EVENTS = "service.included.events";
     public static final String MONITOR_CELL_MESSAGE_QUEUE_SIZE = "cell.message.queue.size";
     public static final String MONITOR_CELL_START_TIME = "cell.start.time";
     public static final String MONITOR_CELL_LAST_HEARTBEAT_LATENCY = "cell.last.heartbeat.latency";
@@ -22,4 +23,21 @@ public class GConstant {
     public static final String MONITOR_CELL_PNO_COUNT = "cell.pno.count";
     public static final String MONITOR_CELL_BATCH_SIZE = "cell.batch.size";
 
+    public static final String GRAMPUS_LOGO = "\n" +
+            "  ________                                          \n" +
+            " /  _____/___________    _____ ______  __ __  ______\n" +
+            "/   \\  __\\_  __ \\__  \\  /     \\\\____ \\|  |  \\/  ___/\n" +
+            "\\    \\_\\  \\  | \\// __ \\|  Y Y  \\  |_> >  |  /\\___ \\ \n" +
+            " \\______  /__|  (____  /__|_|  /   __/|____//____  >\n" +
+            "        \\/           \\/      \\/|__|              \\/ ";
+    public static final String GRAMPUS_TEST_LOGO = "\n" +
+            "\n" +
+            "   _____                                       _____         _   \n" +
+            "  |  __ \\                                     |_   _|       | |  \n" +
+            "  | |  \\/_ __ __ _ _ __ ___  _ __  _   _ ___    | | ___  ___| |_ \n" +
+            "  | | __| '__/ _` | '_ ` _ \\| '_ \\| | | / __|   | |/ _ \\/ __| __|\n" +
+            "  | |_\\ \\ | | (_| | | | | | | |_) | |_| \\__ \\   | |  __/\\__ \\ |_ \n" +
+            "   \\____/_|  \\__,_|_| |_| |_| .__/ \\__,_|___/   \\_/\\___||___/\\__|\n" +
+            "                            | |                                  \n" +
+            "                            |_|                                  \n";
 }

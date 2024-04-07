@@ -1,7 +1,9 @@
 package org.grampus.core;
 
 import org.grampus.core.monitor.GMonitor;
+import org.grampus.core.monitor.GMonitorMap;
 import org.grampus.log.GLogger;
+import org.grampus.util.GDateTimeUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.stream.Collectors;
 
 public class GService implements GCellController, GMonitor {
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(getScheduledTheadPoolSize());
@@ -17,18 +20,32 @@ public class GService implements GCellController, GMonitor {
     private String name;
     private GContext context;
     private Map<GEvent, List<GCell>> cells = new HashMap<>();
+    private GMonitorMap monitorMap;
 
     public GService() {
+        this(null);
     }
 
     public GService(String name) {
         this.name = name;
+        monitorMap = new GMonitorMap(this);
     }
 
-    protected void initService() {
+    protected void beforeStart() {
     }
 
-    void initCells() {
+    void start(){
+        initCells();
+        initMonitorMap();
+    }
+
+    private void initMonitorMap() {
+        this.monitorMap.put(GConstant.MONITOR_SERVICE_NAME,this.name);
+        this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME, GDateTimeUtil.now());
+        this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME,this.cells.keySet().stream().map(GEvent::getEventStem).collect(Collectors.joining()));
+    }
+
+    private void initCells() {
         cells.values().forEach(eventCells -> {
             eventCells.forEach(cell -> cell.initCell(this));
         });
@@ -122,5 +139,10 @@ public class GService implements GCellController, GMonitor {
 
     public int getScheduledTheadPoolSize() {
         return GConstant.DEFAULT_SCHEDULE_WORKER_POOL_SIZE;
+    }
+
+    @Override
+    public GMonitorMap monitorMap() {
+        return monitorMap;
     }
 }

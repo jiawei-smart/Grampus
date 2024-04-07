@@ -46,8 +46,8 @@ public class GRouter {
         return GStringUtil.splitAsList(chainStr, GConstant.CHAIN_SPLIT_CHAR);
     }
 
-    public void parseServiceEventChain(Map<String, GService> services) {
-        services.values().forEach(service -> {
+    public void parseServiceEventChain(Collection<GService> services) {
+        services.forEach(service -> {
             Map<GEvent, List<GCell>> eventCells = service.getCells();
             Map<String, Map<Integer, String>> serviceEventListenerPath = new HashMap<>();
             eventCells.keySet().forEach(event -> {
@@ -141,6 +141,10 @@ public class GRouter {
             serviceOpenEvents.put(service, new HashSet<>());
         }
         this.serviceOpenEvents.get(service).add(event);
+    }
+
+    public Map<String, Set<String>> getChainsEventTable() {
+        return chainsEventTable;
     }
 
     public void clearPathCache(){

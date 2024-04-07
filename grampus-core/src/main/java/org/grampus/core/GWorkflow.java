@@ -53,7 +53,7 @@ public class GWorkflow {
     public void start(){
         buildWorkflow();
         this.service(GConstant.PLUGIN_SERVICE, new PluginService());
-        this.context.start(this.services, this.chains);
+        this.context.start(this.services.values(), this.chains);
     }
 
     public void buildWorkflow() {

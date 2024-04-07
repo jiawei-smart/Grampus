@@ -13,24 +13,19 @@ public class GMessageHeader {
     private String id;
     private GMsgType msgType;
     private String sourceCellId;
+    private String lastEvent;
 
     private final long startNanoTime;
 
-    public GMessageHeader(String sourceCellId,GMsgType msgType) {
+    public GMessageHeader(GMsgType msgType) {
         this.msgType = msgType;
-        this.id = sourceCellId +"_"+UUID.randomUUID();
         this.startNanoTime = System.nanoTime();
     }
 
-//    public GMessageHeader() {
-//        this(GMsgType.BUSINESS_MESSAGE);
-//    }
-//
-//    public GMessageHeader(GMsgType msgType) {
-//        this(null,msgType);
-//    }
-
     public void update(String event, String cellId){
+        if(this.id == null){
+            this.id = cellId+"_"+UUID.randomUUID();
+        }
         this.history.add(cellId);
         updateTimestamp(cellId,event);
     }
@@ -41,10 +36,15 @@ public class GMessageHeader {
 
     public void updateTimestamp(String cellId, String event){
         this.timestamps.put(cellId+":"+event, GDateTimeUtil.now());
+        this.lastEvent = event;
     }
 
     public GMsgType msgType() {
         return msgType;
+    }
+
+    public String getLastEvent() {
+        return lastEvent;
     }
 
     public void end(){

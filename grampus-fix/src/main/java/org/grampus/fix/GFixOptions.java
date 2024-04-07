@@ -1,16 +1,10 @@
 package org.grampus.fix;
 
-import org.grampus.core.client.GClientConfig;
+import org.grampus.core.client.GAPIConfig;
 
-public class GFixOptions implements GClientConfig {
-    public static final String CONFIG_KEY = "fixConfig";
-    public static final String DEFAULT_CONFIG_YAML = "fixConfig.yaml";
+public class GFixOptions implements GAPIConfig {
 
     private String quickFixConfigFile;
-    @Override
-    public String getConfigKey() {
-        return CONFIG_KEY;
-    }
 
     public String getQuickFixConfigFile() {
         return quickFixConfigFile;

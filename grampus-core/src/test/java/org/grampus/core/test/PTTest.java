@@ -17,9 +17,9 @@ public class PTTest {
             long startTime;
             GTimer timer;
 
-            Integer messageSize = 10000;
+            Integer messageSize = 10;
 
-            Integer parallel = 30;
+            Integer parallel = 10;
 
             @Override
             public void buildWorkflow() {
@@ -35,7 +35,6 @@ public class PTTest {
                             }
                         }).schedule(1L, TimeUnit.MILLISECONDS);
                         startTime = now();
-                        GLogger.info("**** start *****");
                         getController().createTimer(() -> System.out.println("******send******" + (i.get() - 1))).schedule(5l, TimeUnit.SECONDS);
 
                     }
@@ -57,7 +56,7 @@ public class PTTest {
                         try {
                             Thread.sleep(10);
                             receivedMsgCount.addAndGet(1);
-                            GLogger.info("**** process msg seq [{}],total msgCount [{}], total cost time [{}]", payload, receivedMsgCount.get(), now() - startTime);
+                            GLogger.info("**** process msg seq [{}],total msgCount [{}], total cost time [{}], avg [{}]", payload, receivedMsgCount.get(), now() - startTime, (now() - startTime)/receivedMsgCount.get());
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }

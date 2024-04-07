@@ -5,14 +5,14 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.config.SaslConfigs;
-import org.grampus.core.client.GClientConfig;
+import org.grampus.core.client.GAPIConfig;
 import org.grampus.util.GStringUtil;
 
 import java.util.Properties;
 import java.util.UUID;
 
-public class GKafkaOptions implements GClientConfig {
-    public static final String KAFKA_CONFIG = "kafkaConfig";
+public class GKafkaOptions implements GAPIConfig {
+
     private String producerTopic;
     private String bootstrapServers;
     private String keySerializer = "org.apache.kafka.common.serialization.StringSerializer";
@@ -42,11 +42,6 @@ public class GKafkaOptions implements GClientConfig {
     private String consumeDuration;
     private String consumerPartitions; // partition concat by char "," group concat by char ";"
     private String schemaRegisterUrl;
-
-    @Override
-    public String getConfigKey() {
-        return KAFKA_CONFIG;
-    }
 
     public String getProducerTopic() {
         return producerTopic;

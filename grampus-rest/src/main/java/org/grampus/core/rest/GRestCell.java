@@ -2,7 +2,7 @@ package org.grampus.core.rest;
 import org.grampus.core.GConstant;
 import org.grampus.core.annotation.plugin.GPlugin;
 import org.grampus.core.annotation.rest.GRestController;
-import org.grampus.core.monitor.MonitorMap;
+import org.grampus.core.monitor.GMonitorMap;
 import org.grampus.core.plugin.GPluginCell;
 import org.grampus.log.GLogger;
 
@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @GPlugin(event = GConstant.REST_PLUGIN)
 public class GRestCell extends GPluginCell<GRestController> {
+    public static final String GREST_CONFIG_KEY = "restConfig";
     public static final String REST_DEFAULT_CONFIG_YAML = "plugin/rest.yaml";
     private GRestClient client;
     private AtomicInteger expectedCellCount = new AtomicInteger();
@@ -20,7 +21,7 @@ public class GRestCell extends GPluginCell<GRestController> {
     @Override
     public void start() {
         onStatus("START", false);
-        GRestOptions config = getController().getConfig(GRestOptions.GREST_CONFIG_KEY, GRestOptions.class);
+        GRestOptions config = getConfig(GRestOptions.class);
         if (config == null) {
             File file = new File(this.getClass().getClassLoader().getResource(REST_DEFAULT_CONFIG_YAML).getFile());
             if (file.exists()) {
@@ -57,7 +58,11 @@ public class GRestCell extends GPluginCell<GRestController> {
     }
 
     @Override
-    public void onMonitorListener(String cellId, MonitorMap monitorMap) {
+    public void onMonitorListener(String cellId, GMonitorMap monitorMap) {
         expectedCellCount.addAndGet(1);
+    }
+    @Override
+    public String getConfigKey() {
+        return GREST_CONFIG_KEY;
     }
 }

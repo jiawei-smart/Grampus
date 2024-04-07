@@ -10,6 +10,8 @@ public class GCellOptions {
 
     private int heartbeatMsgTimeoutMills = 1000;
 
+    private long monitorIntervalMills = 3000;
+
     public int getBatchSize() {
         return batchSize;
     }
@@ -48,5 +50,13 @@ public class GCellOptions {
 
     public void setHeartbeatMsgTimeoutMills(int heartbeatMsgTimeoutMills) {
         this.heartbeatMsgTimeoutMills = heartbeatMsgTimeoutMills;
+    }
+
+    public long getMonitorIntervalMills() {
+        return monitorIntervalMills;
+    }
+
+    public void setMonitorIntervalMills(long monitorIntervalMills) {
+        this.monitorIntervalMills = monitorIntervalMills;
     }
 }
