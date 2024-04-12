@@ -246,7 +246,7 @@ public class GCell<T> implements GMonitor {
 
     public String getConfigFileKey(){return null;}
 
-    public <O> O getConfig(Class<O> type){
+    public <C> C getConfig(Class<C> type){
         String configKey= this.getConfigKey();
         if(this.getConfigKey() != null){
             return this.controller.getConfig(configKey,type);

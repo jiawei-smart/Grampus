@@ -1,15 +1,14 @@
 package org.grampus.replay;
 
 import net.openhft.chronicle.map.ChronicleMap;
-import org.grampus.core.client.GAPIClient;
+import org.grampus.core.client.GAPIBase;
 import org.grampus.log.GLogger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Set;
 
-public class GReplayClient implements GAPIClient<GReplayOptions> {
+public class GReplayClient implements GAPIBase<GReplayOptions> {
     private ChronicleMap<String, byte[]> chronicleMap;
     private GMarsheller marsheller;
 

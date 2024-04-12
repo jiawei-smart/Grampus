@@ -25,6 +25,7 @@
         <module>grampus-fix</module>
         <module>grampus-kafka</module>
         <module>grampus-replay</module>
+        <module>grampus-grpc</module>
     </modules>
 
     <dependencies>

@@ -6,7 +6,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.TopicPartition;
-import org.grampus.core.client.GAPIClient;
+import org.grampus.core.client.GAPIBase;
 import org.grampus.log.GLogger;
 import org.grampus.util.GStringUtil;
 
@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class GKafkaClient implements GAPIClient<GKafkaOptions> {
+public class GKafkaClient implements GAPIBase<GKafkaOptions> {
     private GKafkaOptions config;
     private GKafkaMsgHandler handler;
     private KafkaProducer producer;

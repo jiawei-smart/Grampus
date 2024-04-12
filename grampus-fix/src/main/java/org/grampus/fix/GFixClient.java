@@ -1,6 +1,6 @@
 package org.grampus.fix;
 
-import org.grampus.core.client.GAPIClient;
+import org.grampus.core.client.GAPIBase;
 import org.grampus.log.GLogger;
 import org.grampus.util.GStringUtil;
 import quickfix.*;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static quickfix.SessionFactory.ACCEPTOR_CONNECTION_TYPE;
 import static quickfix.SessionFactory.SETTING_CONNECTION_TYPE;
 
-public class GFixClient implements GAPIClient<GFixOptions>, Application {
+public class GFixClient implements GAPIBase<GFixOptions>, Application {
     private GFixMsgHandler handler;
     private SocketAcceptor acceptor;
     private SocketInitiator initiator;

@@ -6,7 +6,7 @@ import org.grampus.core.annotation.rest.GRestMethodType;
 import org.grampus.core.annotation.rest.GRestResp;
 import org.grampus.core.annotation.rest.spec.GRestGroupSpec;
 import org.grampus.core.annotation.rest.spec.GRestParamSpec;
-import org.grampus.core.client.GAPIClient;
+import org.grampus.core.client.GAPIBase;
 import org.grampus.log.GLogger;
 import org.grampus.swagger.GSwagger;
 import org.grampus.swagger.spec.MethodSpec;
@@ -27,7 +27,7 @@ import java.util.List;
 import static org.grampus.swagger.spec.EndpointSpec.endpointPath;
 import static org.grampus.swagger.spec.MethodSpec.path;
 
-public class GRestClient implements GAPIClient<GRestOptions> {
+public class GRestClient implements GAPIBase<GRestOptions> {
     private List<GRestController> controllers = new ArrayList<>();
     private GRestOptions config;
 
