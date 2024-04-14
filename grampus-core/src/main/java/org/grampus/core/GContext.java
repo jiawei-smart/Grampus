@@ -32,6 +32,7 @@ public class GContext {
         initCellsSupervisor(services);
         router.parseServiceEventChain(services);
         servicesStart(services);
+        servicesCellsBeforeStart(services);
         servicesCellsStart(services);
         this.servicesSupervisor.startUpdateMonitorMap();
         this.cellsSupervisor.startUpdateMonitorMap();
@@ -41,6 +42,10 @@ public class GContext {
         }else {
             printInfo(services);
         }
+    }
+
+    private void servicesCellsBeforeStart(Collection<GService> services) {
+        services.forEach(GService::cellsBeforeStart);
     }
 
     private void servicesCellsStart(Collection<GService> services) {

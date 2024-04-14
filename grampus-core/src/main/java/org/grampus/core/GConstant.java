@@ -40,4 +40,5 @@ public class GConstant {
             "   \\____/_|  \\__,_|_| |_| |_| .__/ \\__,_|___/   \\_/\\___||___/\\__|\n" +
             "                            | |                                  \n" +
             "                            |_|                                  \n";
+    public static final String MICROMETER_PROMETHEUS_PLUGIN = "MICROMETER_PROMETHEUS_PLUGIN";
 }

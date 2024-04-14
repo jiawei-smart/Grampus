@@ -33,6 +33,7 @@ public class GService implements GCellController, GMonitor {
     }
 
     protected void beforeStart() {
+
     }
 
     void start(){
@@ -49,6 +50,12 @@ public class GService implements GCellController, GMonitor {
     private void initCells() {
         cells.values().forEach(eventCells -> {
             eventCells.forEach(cell -> cell.initCell(this));
+        });
+    }
+
+    public void cellsBeforeStart() {
+        cells.values().forEach(eventCells -> {
+            eventCells.forEach(cell -> cell.beforeStart());
         });
     }
 

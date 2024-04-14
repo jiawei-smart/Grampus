@@ -30,6 +30,7 @@ public class GCell<T> implements GMonitor {
 
     private Counter receivedMsgCount;
     private Counter processedMsgCount;
+    private Counter eventOutMsgCount;
     public GCell() {
     }
 
@@ -59,9 +60,6 @@ public class GCell<T> implements GMonitor {
         });
         monitorMap = new GMonitorMap(this);
         setParallel(options.getParallel());
-        initMonitorMap();
-        receivedMsgCount = Metrics.counter("cell",getId(),"received.message.count");
-        processedMsgCount = Metrics.counter("cell",getId(),"processed.message.count");
     }
 
     private void initMonitorMap() {
@@ -70,11 +68,18 @@ public class GCell<T> implements GMonitor {
         this.monitorMap.put(GConstant.MONITOR_CELL_PNO_COUNT,this.options.getParallel());
     }
 
+    public void beforeStart() {
+    }
+
     void cellStart() {
+        initMonitorMap();
         controller.submitBlockingTask(this::start);
         controller.submitBlockingTask(() -> onPlugin(GConstant.REST_PLUGIN, new GRestAdaptor(this).getController()));
         startHeartbeat();
         startBatchTimer();
+        receivedMsgCount = Metrics.counter("cell.received.message","cellId", getId());
+        processedMsgCount = Metrics.counter("cell.processed.message","cellId", getId());
+        eventOutMsgCount = Metrics.counter("cell.out.message","cellId", getId());
     }
 
     private void fromAdmin(GMessage message) {
@@ -141,7 +146,7 @@ public class GCell<T> implements GMonitor {
                     } catch (Exception e) {
                         GLogger.error("failure to handle message [{}], with [{}]", message, e);
                     }finally {
-                        processedMsgCount.count();
+                        processedMsgCount.increment();
                     }
                 }, isWorker());
             }
@@ -179,6 +184,7 @@ public class GCell<T> implements GMonitor {
             message = GMessage.newBusinessMessage().setPayload(message).meta(meta);
         }
         this.adaptor.publishMessage(event, (GMessage) message);
+        this.eventOutMsgCount.increment();
     }
 
 
