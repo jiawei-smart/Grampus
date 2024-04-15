@@ -26,6 +26,7 @@
         <module>grampus-kafka</module>
         <module>grampus-replay</module>
         <module>grampus-micrometer</module>
+        <module>grampus-redis</module>
     </modules>
 
     <dependencyManagement>
