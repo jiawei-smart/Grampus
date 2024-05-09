@@ -19,10 +19,16 @@ public class GTimer {
         return this;
     }
 
+    public GTimer schedule(Long times, Long delay, TimeUnit timeUnit){
+        this.scheduledFuture = scheduleAcceptor.schedule(this.runnable, times,timeUnit,delay);
+        return this;
+    }
+
     public void cancel(){
         this.scheduledFuture.cancel(true);
     }
 }
 interface ScheduleAcceptor{
     ScheduledFuture schedule(Runnable runnable, Long time, TimeUnit timeUnit);
+    ScheduledFuture schedule(Runnable runnable, Long time, TimeUnit timeUnit, Long delay);
 }

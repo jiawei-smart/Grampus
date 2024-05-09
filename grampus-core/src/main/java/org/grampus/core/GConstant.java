@@ -41,4 +41,9 @@ public class GConstant {
             "                            | |                                  \n" +
             "                            |_|                                  \n";
     public static final String MICROMETER_PROMETHEUS_PLUGIN = "MICROMETER_PROMETHEUS_PLUGIN";
+
+    public static final String PLUGIN_API_METHODE = "PLUGIN_API_METHODE";
+    public static final String PLUGIN_API_ARGS = "PLUGIN_API_ARGS";
+    public static final String PLUGIN_API_TYPE = "PLUGIN_API_TYPE";
+
 }

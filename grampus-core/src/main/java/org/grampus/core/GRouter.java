@@ -16,6 +16,7 @@ public class GRouter {
     private Map<String, Set<String>> serviceOpenEvents = new HashMap<>();
 
     private Map<String, GAdaptor> registeredAdaptors = new HashMap<>();
+    private Map<String,String> serviceDefaultAdaptorIds = new HashMap<>();
 
     public void parseWorkflowChain(List<String> chainStrList) {
         chainStrList.forEach(chainStr -> {
@@ -83,8 +84,23 @@ public class GRouter {
             if (chainsEventTable.containsKey(adapterId)) {
                 return chainsEventTable.get(adapterId);
             }
+            String serviceDefaultAdaptorId = getServiceDefaultAdaptorId(serviceName);
+            if(this.chainsEventTable.containsKey(serviceDefaultAdaptorId)){
+                return chainsEventTable.get(serviceDefaultAdaptorId);
+            }
         }
         return Collections.EMPTY_SET;
+    }
+
+    private String getServiceDefaultAdaptorId(String serviceName) {
+        if(!serviceDefaultAdaptorIds.containsKey(serviceName)){
+            String serviceDefaultAdaptorId = GAdaptor.buildAdaptorId(serviceName,GConstant.DEFAULT_EVENT);
+            serviceDefaultAdaptorIds.put(serviceName,serviceDefaultAdaptorId);
+            return serviceDefaultAdaptorId;
+        }else {
+            return serviceDefaultAdaptorIds.get(serviceName);
+        }
+
     }
 
     private String nextMessagePathFromSameService(String serviceName, String currentEvent, Integer currentEventSeq, String targetEvent) {

@@ -9,14 +9,18 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
+
 
 public class GService implements GCellController, GMonitor {
     private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(getScheduledTheadPoolSize());
-    private ExecutorService executorBlockingService = Executors.newCachedThreadPool();
+    private ExecutorService executorBlockingService = Executors.newCachedThreadPool(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            return null;
+        }
+    });
     private ExecutorService executorService = Executors.newCachedThreadPool();
     private String name;
     private GContext context;
@@ -114,7 +118,17 @@ public class GService implements GCellController, GMonitor {
     }
 
     public GTimer createTimer(Runnable runnable) {
-        return new GTimer(runnable,(runner, time, timeUnit)->this.scheduledExecutorService.scheduleAtFixedRate(runner,0,time,timeUnit));
+        return new GTimer(runnable, new ScheduleAcceptor() {
+            @Override
+            public ScheduledFuture schedule(Runnable runner, Long time, TimeUnit timeUnit) {
+                return scheduledExecutorService.scheduleAtFixedRate(runner,0,time,timeUnit);
+            }
+
+            @Override
+            public ScheduledFuture schedule(Runnable runnable, Long time, TimeUnit timeUnit, Long delay) {
+                return scheduledExecutorService.scheduleAtFixedRate(runnable,delay,time,timeUnit);
+            }
+        });
     }
     @Override
     public void submitBlockingTask(Runnable runnable) {

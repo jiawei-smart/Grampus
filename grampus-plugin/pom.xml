@@ -11,5 +11,44 @@
 
     <artifactId>grampus-plugin</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.google.auto.service</groupId>
+            <artifactId>auto-service</artifactId>
+            <version>1.0-rc7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>1.13.0</version>
+        </dependency>
+        <dependency>
+            <artifactId>grampus-core</artifactId>
+            <groupId>org.grampus</groupId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <artifactId>grampus-annotation-processor</artifactId>
+            <groupId>org.grampus</groupId>
+            <version>1.0.0</version>
+        </dependency>
+    </dependencies>
+
+<!--    <build>-->
+<!--        <plugins>-->
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-compiler-plugin</artifactId>-->
+<!--                <version>3.8.1</version>-->
+<!--                <configuration>-->
+<!--                    <annotationProcessors>-->
+<!--                        <annotationProcessor>org.grampus.annotation.processors.GPluginApiAnnotationProcessor</annotationProcessor>-->
+<!--                    </annotationProcessors>-->
+<!--                    <showWarnings>true</showWarnings>-->
+<!--                </configuration>-->
+<!--            </plugin>-->
+<!--        </plugins>-->
+<!--    </build>-->
+
 
 </project>

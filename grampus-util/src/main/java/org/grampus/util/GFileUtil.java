@@ -37,9 +37,14 @@ public class GFileUtil {
 
     public static boolean isExistedInClasspath(String filename){
         try {
-            return isExisted(Paths.get(Objects.requireNonNull(GFileUtil.class.getClassLoader().getResource(filename)).toURI()));
+            URL url = GFileUtil.class.getClassLoader().getResource(filename);
+            if(url != null){
+                return isExisted(Paths.get(url.toURI()));
+            }else {
+                return false;
+            }
         } catch (URISyntaxException e) {
-            GLogger.error("GFileUtil: failure to check if the file [{}] exist in class path, with [{}]",filename,e);
+//            GLogger.error("GFileUtil: failure to check if the file [{}] exist in class path, with [{}]",filename,e);
             return false;
         }
     }

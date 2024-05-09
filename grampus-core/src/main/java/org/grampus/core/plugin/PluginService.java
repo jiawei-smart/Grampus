@@ -10,7 +10,11 @@ import java.util.Set;
 public class PluginService extends GService {
     @Override
     protected void beforeStart() {
-        Reflections reflections = new Reflections("org.grampus");
+        parsePluginAnnotations();
+    }
+
+    private void parsePluginAnnotations() {
+        Reflections reflections = new Reflections("org");
         Set<Class<?>> pluginCellClazzs = reflections.getTypesAnnotatedWith(GPlugin.class);
         if(pluginCellClazzs != null && pluginCellClazzs.size() > 0){
             pluginCellClazzs.forEach(pluginClazz->{
