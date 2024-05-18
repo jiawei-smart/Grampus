@@ -9,14 +9,17 @@ import org.grampus.util.GStringUtil;
 import java.util.*;
 
 public class GRouter {
-    public final GMessageBus messageBus = new GMessageBusImp();
+    public final GMessageBus messageBus;
     private Map<String, Map<String, Map<Integer, String>>> servicesEventCellTable = new HashMap<>();
     private Map<String, Set<String>> chainsEventTable = new HashMap<>();
-
     private Map<String, Set<String>> serviceOpenEvents = new HashMap<>();
-
     private Map<String, GAdaptor> registeredAdaptors = new HashMap<>();
     private Map<String,String> serviceDefaultAdaptorIds = new HashMap<>();
+    private GWorkflowOptions options;
+    public GRouter(GWorkflowOptions options) {
+        this.options =options;
+        messageBus = new GMessageBusImp(options);
+    }
 
     public void parseWorkflowChain(List<String> chainStrList) {
         chainStrList.forEach(chainStr -> {
@@ -152,11 +155,11 @@ public class GRouter {
         }
     }
 
-    public void addGlobalEvent(String service, String event) {
+    public void addGlobalEvent(String service, String[] events) {
         if(!this.serviceOpenEvents.containsKey(service)){
             serviceOpenEvents.put(service, new HashSet<>());
         }
-        this.serviceOpenEvents.get(service).add(event);
+        this.serviceOpenEvents.get(service).addAll(Arrays.asList(events));
     }
 
     public Map<String, Set<String>> getChainsEventTable() {

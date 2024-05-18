@@ -2,6 +2,7 @@ package org.grampus.core.messagebus.imp;
 
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
+import org.grampus.core.GWorkflowOptions;
 import org.grampus.core.messagebus.GMessageBus;
 import org.grampus.core.messagebus.GMessageConsumer;
 import org.grampus.core.message.GMessage;
@@ -11,8 +12,10 @@ import org.grampus.log.GLogger;
 public class GMessageBusImp implements GMessageBus {
     private final Vertx vertx;
 
-    public GMessageBusImp() {
+    public GMessageBusImp(GWorkflowOptions workflowOptions) {
         VertxOptions options = new VertxOptions();
+        options.setBlockedThreadCheckInterval(workflowOptions.getThreadProcessTimeout());
+        options.setBlockedThreadCheckIntervalUnit(workflowOptions.getThreadProcessTimeoutTimeUnit());
         vertx = Vertx.vertx(options);
         vertx.eventBus().registerDefaultCodec(GMessage.class, new GMessageCodec());
     }

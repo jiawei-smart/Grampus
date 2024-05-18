@@ -1,3 +1,5 @@
-S1:
-  key: value
-  env: !ENV ${myEnv}
+!org.grampus.core.GWorkflowOptions
+   config:
+      S1:
+        key: value
+        env: !ENV ${myEnv}

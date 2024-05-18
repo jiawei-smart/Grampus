@@ -1,7 +1,13 @@
 package org.grampus.core;
 
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import org.grampus.core.annotation.plugin.GPluginApi;
 import org.grampus.core.annotation.plugin.GPluginAutowired;
+import org.grampus.core.executor.GThreadChecker;
+import org.grampus.core.executor.GThreadFactory;
+import org.grampus.core.executor.GWorkerExecutor;
 import org.grampus.core.monitor.GMonitorSupervisor;
 import org.grampus.core.plugin.GPluginMessage;
 import org.grampus.log.GLogger;
@@ -13,31 +19,41 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
 public class GContext {
 
-    private Map<String, Object> workflowConfig;
-    public final GRouter router = new GRouter();
-
+    private GWorkflowOptions options;
+    public final GRouter router;
     private final GMonitorSupervisor servicesSupervisor = new GMonitorSupervisor();
     private final GMonitorSupervisor cellsSupervisor = new GMonitorSupervisor();
     private GTester tester;
+    private GThreadFactory threadFactory;
+    private GWorkerExecutor workerExecutor;
+    private ScheduledExecutorService scheduledExecutor;
+    private Executor blockingExecutor;
+    private GThreadChecker threadChecker;
 
 
     public GContext(String configYaml) {
-        Map config = null;
         if (GFileUtil.isExistedInClasspath(configYaml)) {
-            config = GYamlUtil.load(configYaml);
+            options = GYamlUtil.load(configYaml,GWorkflowOptions.class);
         }
-        if (config != null) {
-            this.workflowConfig = config;
-        } else {
-            this.workflowConfig = new HashMap();
+        if (options == null) {
+            this.options = new GWorkflowOptions();
         }
+        router = new GRouter(options);
+        threadChecker = new GThreadChecker(options.getThreadCheckInterval(),options.getThreadCheckTimeUnit(),options.getThreadProcessTimeout(),options.getThreadProcessTimeoutTimeUnit());
+        threadFactory =this.getGThreadFactory();
+        EventLoopGroup workPool = new NioEventLoopGroup(options.getWorkerPoolSize(), threadFactory);
+        workerExecutor = new GWorkerExecutor(workPool);
+        scheduledExecutor = Executors.newScheduledThreadPool(options.getScheduledTheadPoolSize());
+        blockingExecutor = !threadFactory.isSupportVThread() ? Executors.newCachedThreadPool() : (runnable)->threadFactory.newVirtualThread(runnable).start();
     }
 
     public void start(Collection<GService> services, List<String> chains) {
@@ -76,6 +92,16 @@ public class GContext {
                 }
             }
         }
+    }
+
+    public Executor getSingleExecutor(){
+        EventLoop executor = workerExecutor.getExecutor();
+        return new Executor(){
+            @Override
+            public void execute(Runnable command) {
+                workerExecutor.execute(command,executor);
+            }
+        };
     }
 
     private void injectHandlerProxy(GCell cell, Field field) {
@@ -159,11 +185,11 @@ public class GContext {
     }
 
     public Map<Object, Object> getServiceConfig(String name) {
-        return (Map<Object, Object>) workflowConfig.get(name);
+        return (Map<Object, Object>) options.configService(name);
     }
 
     public Map<String, Object> getGlobalConfig() {
-        return this.workflowConfig;
+        return this.options.config();
     }
 
     public void setTester(GTester gTester) {
@@ -176,5 +202,24 @@ public class GContext {
         } else {
             GLogger.error("the asserts only can be used in test model!");
         }
+    }
+
+    public GThreadFactory getGThreadFactory() {
+        if(threadFactory == null){
+            threadFactory = new GThreadFactory(threadChecker);
+        }
+        return threadFactory;
+    }
+
+    public GWorkerExecutor getWorkerExecutor() {
+        return workerExecutor;
+    }
+
+    public ScheduledExecutorService getScheduledExecutor() {
+        return scheduledExecutor;
+    }
+
+    public Executor getBlockingExecutor() {
+        return blockingExecutor;
     }
 }

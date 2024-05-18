@@ -1,6 +1,9 @@
 package org.grampus.core;
 
+import org.grampus.core.executor.GTimer;
 import org.grampus.util.GYamlUtil;
+
+import java.util.concurrent.Executor;
 
 public interface GCellController {
    void submitBlockingTask(Runnable runnable);
@@ -11,4 +14,6 @@ public interface GCellController {
       return GYamlUtil.load(fileName, type);
    }
    void submitAssertTask(Runnable runnable);
+
+   Executor getSingleExecutor();
 }

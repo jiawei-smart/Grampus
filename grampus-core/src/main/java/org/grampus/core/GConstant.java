@@ -12,6 +12,7 @@ public class GConstant {
     public static final String GLOBAL_OPEN_ALL_EVENT = "*";
     public static final int DEFAULT_MESSAGE_QUEUE_SIZE = 10000;
     public static final int DEFAULT_SCHEDULE_WORKER_POOL_SIZE = 2;
+    public static final int DEFAULT_WORKER_POOL_SIZE = 20;
     public static final String REST_PLUGIN = "REST_PLUGIN";
     public static final String MONITOR_SERVICE_START_TIME = "service.start.time";
     public static final String MONITOR_SERVICE_NAME = "service.name";
@@ -46,4 +47,5 @@ public class GConstant {
     public static final String PLUGIN_API_ARGS = "PLUGIN_API_ARGS";
     public static final String PLUGIN_API_TYPE = "PLUGIN_API_TYPE";
 
+    public static final long DEFAULT_THREAD_CHECK_INTERVAL_MILLS = 1l;
 }

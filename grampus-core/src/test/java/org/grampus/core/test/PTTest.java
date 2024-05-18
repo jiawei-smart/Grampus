@@ -2,8 +2,9 @@ package org.grampus.core.test;
 
 import org.grampus.core.GCell;
 import org.grampus.core.GCellOptions;
-import org.grampus.core.GTimer;
+import org.grampus.core.executor.GTimer;
 import org.grampus.core.GWorkflow;
+import org.grampus.core.message.GMessage;
 import org.grampus.log.GLogger;
 
 import java.util.Map;
@@ -15,9 +16,8 @@ public class PTTest {
     public static void main(String[] args) {
         GWorkflow workflow = new GWorkflow() {
             long startTime;
-            GTimer timer;
 
-            Integer messageSize = 10;
+            Integer messageSize = 10000;
 
             Integer parallel = 10;
 
@@ -26,16 +26,12 @@ public class PTTest {
                 service("S1").cell(new GCell() {
                     @Override
                     public void start() {
-                        AtomicInteger i = new AtomicInteger(1);
-                        timer = getController().createTimer(() -> {
-                            if (i.get() <= messageSize) {
-                                onEvent("E0", i.addAndGet(1));
-                            } else {
-                                timer.cancel();
-                            }
-                        }).schedule(1L, TimeUnit.MILLISECONDS);
                         startTime = now();
-                        getController().createTimer(() -> System.out.println("******send******" + (i.get() - 1))).schedule(5l, TimeUnit.SECONDS);
+                        getController().submitTask(()->{
+                            for (int i = 0; i < messageSize; i++) {
+                                onEvent("E0", i+1);
+                            }
+                        });
 
                     }
                 }).openEvent("E0");
@@ -60,6 +56,11 @@ public class PTTest {
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
+                    }
+
+                    @Override
+                    public int parallelBy(GMessage message) {
+                       return (Integer) message.payload()%parallel;
                     }
                 });
 

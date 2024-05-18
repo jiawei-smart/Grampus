@@ -1,5 +1,6 @@
 package org.grampus.core;
 
+import org.grampus.core.executor.GTimer;
 import org.grampus.core.monitor.GMonitor;
 import org.grampus.core.monitor.GMonitorMap;
 import org.grampus.log.GLogger;
@@ -9,19 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 
 public class GService implements GCellController, GMonitor {
-    private ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(getScheduledTheadPoolSize());
-    private ExecutorService executorBlockingService = Executors.newCachedThreadPool(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-            return null;
-        }
-    });
-    private ExecutorService executorService = Executors.newCachedThreadPool();
     private String name;
     private GContext context;
     private Map<GEvent, List<GCell>> cells = new HashMap<>();
@@ -43,6 +36,11 @@ public class GService implements GCellController, GMonitor {
     void start(){
         initCells();
         initMonitorMap();
+    }
+
+    @Override
+    public Executor getSingleExecutor(){
+        return this.context.getSingleExecutor();
     }
 
     private void initMonitorMap() {
@@ -118,25 +116,15 @@ public class GService implements GCellController, GMonitor {
     }
 
     public GTimer createTimer(Runnable runnable) {
-        return new GTimer(runnable, new ScheduleAcceptor() {
-            @Override
-            public ScheduledFuture schedule(Runnable runner, Long time, TimeUnit timeUnit) {
-                return scheduledExecutorService.scheduleAtFixedRate(runner,0,time,timeUnit);
-            }
-
-            @Override
-            public ScheduledFuture schedule(Runnable runnable, Long time, TimeUnit timeUnit, Long delay) {
-                return scheduledExecutorService.scheduleAtFixedRate(runnable,delay,time,timeUnit);
-            }
-        });
+        return new GTimer(runnable, this.context.getScheduledExecutor());
     }
     @Override
     public void submitBlockingTask(Runnable runnable) {
-        this.executorBlockingService.submit(runnable);
+        context.getBlockingExecutor().execute(runnable);
     }
     @Override
     public void submitTask(Runnable runnable) {
-        this.executorService.submit(runnable);
+        this.context.getWorkerExecutor().execute(runnable);
     }
 
     @Override
@@ -155,16 +143,14 @@ public class GService implements GCellController, GMonitor {
         this.context.addAssertTask(runnable);
     }
 
-    public void openEvent(String event) {
-        this.context.router.addGlobalEvent(this.name, event);
+    public void openEvent(String... event) {
+        if (event != null) {
+            this.context.router.addGlobalEvent(this.name, event);
+        }
     }
 
     public void setContext(GContext context) {
         this.context = context;
-    }
-
-    public int getScheduledTheadPoolSize() {
-        return GConstant.DEFAULT_SCHEDULE_WORKER_POOL_SIZE;
     }
 
     @Override

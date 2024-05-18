@@ -60,6 +60,10 @@ public class GCell<T> implements GMonitor {
         });
         monitorMap = new GMonitorMap(this);
         setParallel(options.getParallel());
+        initMonitorMap();
+        receivedMsgCount = Metrics.counter("cell.received.message","cellId", getId());
+        processedMsgCount = Metrics.counter("cell.processed.message","cellId", getId());
+        eventOutMsgCount = Metrics.counter("cell.out.message","cellId", getId());
     }
 
     private void initMonitorMap() {
@@ -72,14 +76,10 @@ public class GCell<T> implements GMonitor {
     }
 
     void cellStart() {
-        initMonitorMap();
         controller.submitBlockingTask(this::start);
-        controller.submitBlockingTask(() -> onPlugin(GConstant.REST_PLUGIN, new GRestAdaptor(this).getController()));
+        controller.submitTask(() -> onPlugin(GConstant.REST_PLUGIN, new GRestAdaptor(this).getController()));
         startHeartbeat();
         startBatchTimer();
-        receivedMsgCount = Metrics.counter("cell.received.message","cellId", getId());
-        processedMsgCount = Metrics.counter("cell.processed.message","cellId", getId());
-        eventOutMsgCount = Metrics.counter("cell.out.message","cellId", getId());
     }
 
     private void fromAdmin(GMessage message) {
