@@ -57,6 +57,10 @@ public class GAsyncResult<T> {
         return this;
     }
 
+    public static GAsyncResult resultAs(Object result) {
+       return new GAsyncResult<>().result(result);
+    }
+
     public Throwable cause(){
         return throwable;
     };

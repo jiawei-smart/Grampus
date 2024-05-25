@@ -10,6 +10,7 @@ import java.util.*;
 
 public class GRouter {
     public final GMessageBus messageBus;
+    private static Integer EVENT_PATH_START_SEQ = -1;
     private Map<String, Map<String, Map<Integer, String>>> servicesEventCellTable = new HashMap<>();
     private Map<String, Set<String>> chainsEventTable = new HashMap<>();
     private Map<String, Set<String>> serviceOpenEvents = new HashMap<>();
@@ -52,18 +53,21 @@ public class GRouter {
 
     public void parseServiceEventChain(Collection<GService> services) {
         services.forEach(service -> {
-            Map<GEvent, List<GCell>> eventCells = service.getCells();
             Map<String, Map<Integer, String>> serviceEventListenerPath = new HashMap<>();
-            eventCells.keySet().forEach(event -> {
+            service.getEvents().values().forEach(event -> {
                 Map<Integer, String> eventListenerTable = new HashMap<>();
                 GAdaptor eventListenerAdaptor = registerAdaptor(event);
                 event.initDefaultEventListener(eventListenerAdaptor);
-                eventListenerTable.put(-1,eventListenerAdaptor.getId());
-                List<GCell> cells = eventCells.get(event);
+                eventListenerTable.put(EVENT_PATH_START_SEQ,eventListenerAdaptor.getId());
+                List<GCell> cells = event.getCells();
                 for (int i = 0; i < cells.size(); i++) {
-                    GAdaptor cellAdaptor = registerAdaptor(service.getName(), event.getEventStem(), i);
-                    cells.get(i).setAdaptor(cellAdaptor);
-                    eventListenerTable.put(i, cellAdaptor.getId());
+                    GCell cell = cells.get(i);
+                    GAdaptor adaptor = cell.adaptor();
+                    if(adaptor == null){
+                        adaptor = registerAdaptor(service.getName(), event.getEventStem(), i);
+                        cell.setAdaptor(adaptor);
+                    }
+                    eventListenerTable.put(i, adaptor.getId());
                 }
                 serviceEventListenerPath.put(event.getEventStem(), eventListenerTable);
             });
@@ -168,5 +172,16 @@ public class GRouter {
 
     public void clearPathCache(){
         this.registeredAdaptors.values().forEach(GAdaptor::clearNextPathCache);
+    }
+
+    public Set<String> getEventPath(String serviceName, String eventStem) {
+       Map<Integer,String> eventPathMap = this.servicesEventCellTable.get(serviceName).get(eventStem);
+       if(eventPathMap != null){
+           Set<String> nextPaths = new HashSet();
+           nextPaths.add(eventPathMap.get(EVENT_PATH_START_SEQ));
+          return nextPaths;
+       }else {
+           return nextMessagePathFromWorkflowChain(serviceName, eventStem, eventStem);
+       }
     }
 }

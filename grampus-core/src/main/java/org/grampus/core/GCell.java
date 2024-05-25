@@ -17,22 +17,38 @@ import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
-public class GCell<T> implements GMonitor {
+public class GCell<T> implements GMonitor, GCellEventHandler<T> {
     private GCellOptions options;
     private GAdaptor adaptor;
     private GCellController controller;
     private BlockingQueue<GMessage> messageQueue = new LinkedBlockingDeque<>();
     private Set<String> parallelConsumerTopics = new HashSet<>();
     private Long lastHeartbeatTimeCost = 0L;
-    private boolean isRunning = true;
+//    private boolean isRunning = true;
     private GMonitorMap monitorMap;
-
+    private Random random = new Random();
     private Counter receivedMsgCount;
     private Counter processedMsgCount;
     private Counter eventOutMsgCount;
+    private BiConsumer<T,Map> voidHandler;
+    private GCellEventHandler handler;
+    private boolean isSink = false;
+    private boolean endStarted = false;
+
+    private GCellState state = GCellState.UNREGISTERED;
+
     public GCell() {
     }
+
+    public GCell(GCellEventHandler handler) {
+        this.handler = handler;
+    }
+    public GCell(BiConsumer<T,Map> voidHandler) {
+        this.voidHandler = voidHandler;
+    }
+
 
     public GCell(GCellOptions options) {
         this.options = options;
@@ -40,7 +56,6 @@ public class GCell<T> implements GMonitor {
 
     private enum CELL_HANDLE_ACTION {DATA_PUSH, TIMER_OFFSET}
 
-    private Random random = new Random();
 
     void initCell(GCellController controller) {
         this.controller = controller;
@@ -64,6 +79,7 @@ public class GCell<T> implements GMonitor {
         receivedMsgCount = Metrics.counter("cell.received.message","cellId", getId());
         processedMsgCount = Metrics.counter("cell.processed.message","cellId", getId());
         eventOutMsgCount = Metrics.counter("cell.out.message","cellId", getId());
+        state = GCellState.REGISTERED;
     }
 
     private void initMonitorMap() {
@@ -76,10 +92,16 @@ public class GCell<T> implements GMonitor {
     }
 
     void cellStart() {
-        controller.submitBlockingTask(this::start);
+        controller.submitBlockingTask(()->{
+            this.start();
+            if(state.value() < GCellState.WAITING.value()) {
+                onStatus("CELL Start",true);
+            }
+        });
         controller.submitTask(() -> onPlugin(GConstant.REST_PLUGIN, new GRestAdaptor(this).getController()));
         startHeartbeat();
         startBatchTimer();
+        endStarted = true;
     }
 
     private void fromAdmin(GMessage message) {
@@ -94,9 +116,11 @@ public class GCell<T> implements GMonitor {
     }
 
     protected void onStatus(String statusAudit, boolean status) {
-        this.isRunning = status;
-        if (this.isRunning) {
+        if (status) {
+            this.state = GCellState.RUNNING;
             clearMessageQueue();
+        }else {
+            this.state = GCellState.WAITING;
         }
     }
 
@@ -109,7 +133,7 @@ public class GCell<T> implements GMonitor {
     private synchronized void offset(CELL_HANDLE_ACTION cellAction, GMessage message) {
         if (cellAction == CELL_HANDLE_ACTION.DATA_PUSH) {
             this.messageQueue.offer(message);
-            if (messageQueue.size() == options.getBatchSize() && this.isRunning) {
+            if (messageQueue.size() == options.getBatchSize() && this.state == GCellState.RUNNING) {
                 this.drainTo(options.getBatchSize());
             }
         } else if (cellAction == CELL_HANDLE_ACTION.TIMER_OFFSET) {
@@ -143,6 +167,9 @@ public class GCell<T> implements GMonitor {
                 this.adaptor.consume(parallelConsumeTopic, (message) -> {
                     try {
                         this.handle(message);
+                        if(isSink){
+                            message.header.end();
+                        }
                     } catch (Exception e) {
                         GLogger.error("failure to handle message [{}], with [{}]", message, e);
                     }finally {
@@ -153,8 +180,10 @@ public class GCell<T> implements GMonitor {
         }
     }
     private void startHeartbeat() {
-        GMessage message = GMessage.newHbMessage().setPayload(now());
-        this.adaptor.toMessageBus(this.adaptor.getId(), message);
+        this.getController().createTimer(()->{
+            GMessage message = GMessage.newHbMessage().setPayload(now());
+            this.adaptor.toMessageBus(this.adaptor.getId(), message);
+        }).scheduleMills(options.getHeartbeatIntervalMills());
     }
 
     private void startBatchTimer() {
@@ -187,6 +216,10 @@ public class GCell<T> implements GMonitor {
         this.eventOutMsgCount.increment();
     }
 
+    public void redirectEvent(String event, GMessage message) {
+        this.adaptor.redirectEvent(event, message);
+    }
+
 
     public void onPlugin(String event, Object msg) {
         GMessage message = GMessage.newBusinessMessage().setPayload(msg);
@@ -194,11 +227,17 @@ public class GCell<T> implements GMonitor {
     }
 
     public Object handle(GMessageHeader header, T payload, Map meta) {
+        if(this.handler != null){
+            return this.handler.handle(header, payload, meta);
+        }
         handle(payload, meta);
         return null;
     }
 
     public void handle(T payload, Map meta) {
+        if(voidHandler != null){
+            voidHandler.accept(payload, meta);
+        }
     }
 
     public void start() {
@@ -214,6 +253,10 @@ public class GCell<T> implements GMonitor {
 
     public void setAdaptor(GAdaptor adaptor) {
         this.adaptor = adaptor;
+    }
+
+    public GAdaptor adaptor(){
+        return this.adaptor;
     }
 
     public GCellController getController() {
@@ -239,7 +282,7 @@ public class GCell<T> implements GMonitor {
         return adaptor.getId();
     }
     public String getEvent() {
-        return adaptor.getEvent();
+        return adaptor.getEventId();
     }
 
     public Map meta(String key, Object value){
@@ -278,4 +321,24 @@ public class GCell<T> implements GMonitor {
         this.monitorMap.put(GConstant.MONITOR_CELL_MESSAGE_QUEUE_SIZE,this.messageQueue.size());
         this.monitorMap.put(GConstant.MONITOR_CELL_LAST_HEARTBEAT_LATENCY,lastHeartbeatTimeCost);
     }
+
+    public void close(){
+
+    }
+
+    public void setSink(boolean sink) {
+        isSink = sink;
+    }
+
+    GCellState state(){
+        return state;
+    }
+    void state(GCellState state){
+        this.state = state;
+    }
+
+    boolean isEndStarted(){
+        return endStarted;
+    }
+
 }

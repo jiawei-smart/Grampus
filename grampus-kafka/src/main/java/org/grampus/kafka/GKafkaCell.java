@@ -18,7 +18,11 @@ public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
         onStatus("kafka init",false);
         this.client = new GKafkaClient(this::onConsumerRecord);
         GKafkaOptions config = getConfig(GKafkaOptions.class);
-        this.client.start(config);
+        if(config != null){
+            this.client.start(config);
+        }else {
+            GLogger.error("failed to start kafka client due to config as null, {}",getId());
+        }
         onStatus("kafka init",true);
     }
 
@@ -32,7 +36,7 @@ public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
         if(this.client != null){
             this.client.send(this.getProducerKey(payload,meta),payload);
         }else {
-            GLogger.debug("kafka client as null, failure to send message {}",payload);
+            GLogger.debug("kafka client as null, failure to handle message {}",payload);
         }
     }
 
@@ -48,5 +52,13 @@ public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
     @Override
     public String getConfigFileKey() {
         return KAFKA_CONFIG_YAML;
+    }
+
+    public GKafkaClient getClient() {
+        return client;
+    }
+
+    public void setClient(GKafkaClient client) {
+        this.client = client;
     }
 }

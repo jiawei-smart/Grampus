@@ -6,10 +6,7 @@ import org.grampus.core.monitor.GMonitorMap;
 import org.grampus.log.GLogger;
 import org.grampus.util.GDateTimeUtil;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
@@ -17,7 +14,8 @@ import java.util.stream.Collectors;
 public class GService implements GCellController, GMonitor {
     private String name;
     private GContext context;
-    private Map<GEvent, List<GCell>> cells = new HashMap<>();
+//    private Map<GEvent, List<GCell>> cells = new HashMap<>();
+    private final Map<String, GEvent> events = new HashMap<>();
     private GMonitorMap monitorMap;
 
     public GService() {
@@ -29,7 +27,7 @@ public class GService implements GCellController, GMonitor {
         monitorMap = new GMonitorMap(this);
     }
 
-    protected void beforeStart() {
+    protected void init() {
 
     }
 
@@ -46,52 +44,65 @@ public class GService implements GCellController, GMonitor {
     private void initMonitorMap() {
         this.monitorMap.put(GConstant.MONITOR_SERVICE_NAME,this.name);
         this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME, GDateTimeUtil.now());
-        this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME,this.cells.keySet().stream().map(GEvent::getEventStem).collect(Collectors.joining()));
+        this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME,this.events.values().stream().map(GEvent::getEventStem).collect(Collectors.joining()));
     }
 
     private void initCells() {
-        cells.values().forEach(eventCells -> {
-            eventCells.forEach(cell -> cell.initCell(this));
-        });
+        this.events.values().forEach(event->event.getCells().forEach(cell ->{
+            if(cell.state().value() < GCellState.REGISTERED.value()){
+                cell.initCell(this);
+            }
+        }));
     }
 
     public void cellsBeforeStart() {
-        cells.values().forEach(eventCells -> {
-            eventCells.forEach(cell -> cell.beforeStart());
-        });
+        this.events.values().forEach(event->event.getCells().forEach(cell ->{
+            if(cell.state().value() < GCellState.READY_TO_START.value()){
+                cell.beforeStart();
+                cell.state(GCellState.READY_TO_START);
+            }
+        }));
     }
 
     public void startCells() {
-        cells.values().forEach(eventCells -> {
-            eventCells.forEach(cell -> cell.cellStart());
-        });
+        this.events.values().forEach(event->event.getCells().forEach(cell ->{
+            if(!cell.isEndStarted()){
+                cell.cellStart();
+            }
+        }));
     }
 
     public GService cell(GCell cell) {
         return this.cell(GConstant.DEFAULT_EVENT, cell);
     }
+    public GService source(GCell cell) {
+        return this.cell(cell);
+    }
+
 
     public GService cell(String eventStr, GCell cell) {
-        GEvent event = new GEvent(this.name, eventStr);
-        if (cells.containsKey(event)) {
-            cells.get(event).add(cell);
-        } else {
-            List<GCell> cellList = new ArrayList<>();
-            cellList.add(cell);
-            this.cells.put(event, cellList);
+        String eventKey =GEvent.id(this.name, eventStr);;
+        if (!events.containsKey(eventKey)) {
+            GEvent event = new GEvent(getName(),eventStr);
+            events.put(eventKey,event);
+            event.then(cell);
+        }else {
+            GEvent event = events.get(eventKey);
+            event.then(cell);
         }
+
         return this;
     }
 
     public GService cell(String eventStr, int index, GCell cell) {
-        GEvent event = new GEvent(this.name, eventStr);
-        if (cells.containsKey(event)) {
-            List<GCell> cellList = cells.get(event);
+        String eventKey =GEvent.id(this.name, eventStr);
+        if (events.containsKey(eventKey)) {
+            List<GCell> cellList = events.get(eventKey).getCells();
             if (cellList.size() > index) {
                 cellList.set(index, cell);
                 return this;
             } else {
-                GLogger.warn("failure to replace GCell event:[{}], with index: [{}]", event, index);
+                GLogger.warn("failure to replace GCell event:[{}], with index: [{}]", eventKey, index);
             }
         }
         return this;
@@ -99,12 +110,21 @@ public class GService implements GCellController, GMonitor {
 
     public void setCells(Map<String, List<GCell>> sourceCells) {
         if (sourceCells != null) {
-            sourceCells.keySet().forEach(eventStr -> this.cells.put(new GEvent(this.name, eventStr), sourceCells.get(eventStr)));
+            sourceCells.forEach((eventStr, cells) -> {
+                cells.forEach(cell -> {
+                    this.cell(eventStr,cell);
+                });
+            });
         }
     }
 
-    protected Map<GEvent, List<GCell>> getCells() {
-        return cells;
+//    protected Map<GEvent, List<GCell>> getCells() {
+//        return cells;
+//    }
+
+
+    public Map<String, GEvent> getEvents() {
+        return events;
     }
 
     public String getName() {
@@ -157,4 +177,12 @@ public class GService implements GCellController, GMonitor {
     public GMonitorMap monitorMap() {
         return monitorMap;
     }
+
+    public GEvent event(String event){
+        GEvent gEvent = new GEvent(this.name, event);
+        this.events.put(gEvent.toString(),gEvent);
+        return gEvent;
+    }
+
+    public void stop(){}
 }

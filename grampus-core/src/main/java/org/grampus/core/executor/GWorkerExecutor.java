@@ -34,4 +34,10 @@ public class GWorkerExecutor implements Executor {
     public EventLoop getExecutor() {
         return executorPool.next();
     }
+
+    void close(){
+        if(executorPool != null){
+            executorPool.shutdownGracefully();
+        }
+    }
 }

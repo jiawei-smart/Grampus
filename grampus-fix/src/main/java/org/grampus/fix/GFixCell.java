@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+@GRestGroup(id="fix")
 public class GFixCell extends GCell {
     public static final String CONFIG_KEY = "fixConfig";
     public static final String DEFAULT_CONFIG_YAML = "fixConfig.yaml";

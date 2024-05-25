@@ -6,7 +6,7 @@ public class GCellOptions {
 
     private int timerIntervalMills = 0;
 
-    private int heartbeatIntervalMills = 1000;
+    private long heartbeatIntervalMills = 1000l;
 
     private int heartbeatMsgTimeoutMills = 1000;
 
@@ -36,7 +36,7 @@ public class GCellOptions {
         this.timerIntervalMills = timerIntervalMills;
     }
 
-    public int getHeartbeatIntervalMills() {
+    public long getHeartbeatIntervalMills() {
         return heartbeatIntervalMills;
     }
 

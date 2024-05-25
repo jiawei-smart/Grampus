@@ -21,7 +21,7 @@ public class GReplyCell<T> extends GCell<T> {
     @Override
     public void start() {
         onStatus("replay_init", false);
-        GReplayOptions config = (GReplayOptions) getConfig(GReplayOptions.class);
+        GReplayOptions config = getConfig(GReplayOptions.class);
         if (config != null) {
             client = new GReplayClient();
             client.setMarsheller(getMarsheller());

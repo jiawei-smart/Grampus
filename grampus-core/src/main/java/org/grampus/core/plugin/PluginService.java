@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class PluginService extends GService {
     @Override
-    protected void beforeStart() {
+    protected void init() {
         parsePluginAnnotations();
     }
 

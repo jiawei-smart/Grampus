@@ -27,6 +27,7 @@
         <module>grampus-replay</module>
         <module>grampus-micrometer</module>
         <module>grampus-annotation-processor</module>
+        <module>grampus-redis</module>
     </modules>
 
     <dependencyManagement>

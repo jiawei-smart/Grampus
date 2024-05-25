@@ -11,23 +11,23 @@ public class GAdaptor {
     private GRouter router;
     private String id;
     private Integer eventSeq;
-    private String event;
+    private String eventId;
     private String serviceName;
 
     private Map<String,Set<String>> nextPathsCache = new HashMap<>();
 
-    public GAdaptor(String serviceName, String event, Integer eventSeq) {
-        this(serviceName,event,eventSeq,null);
+    public GAdaptor(String serviceName, String eventId, Integer eventSeq) {
+        this(serviceName, eventId,eventSeq,null);
     }
 
-    public GAdaptor(String serviceName, String event, Integer eventSeq, GRouter router) {
+    public GAdaptor(String serviceName, String eventId, Integer eventSeq, GRouter router) {
         this.eventSeq = eventSeq;
-        this.event = event;
+        this.eventId = eventId;
         this.serviceName = serviceName;
         if (eventSeq != null && eventSeq >= 0) {
-            this.id = buildAdaptorId(this.serviceName,event,eventSeq);
+            this.id = buildAdaptorId(this.serviceName, eventId,eventSeq);
         } else {
-            this.id = buildAdaptorId(this.serviceName,event);
+            this.id = buildAdaptorId(this.serviceName, eventId);
         }
         this.router = router;
     }
@@ -48,8 +48,8 @@ public class GAdaptor {
         return id;
     }
 
-    public String getEvent() {
-        return event;
+    public String getEventId() {
+        return eventId;
     }
 
     public String getServiceName() {
@@ -63,11 +63,11 @@ public class GAdaptor {
 
     public void publishMessage(String nextEvent, GMessage gMessage) {
         if(nextEvent == null){
-            nextEvent = this.event;
+            nextEvent = this.eventId;
         }
         Set<String> nextPaths = getNextEvents(nextEvent);
-        if(nextPaths != null){
-            gMessage.header.update(this.event, this.id);
+        if(nextPaths != null && nextPaths.size() > 0){
+            gMessage.header.update(this.eventId, this.id);
             this.router.toMessageBus(nextPaths,gMessage);
         }
     }
@@ -76,7 +76,7 @@ public class GAdaptor {
         if(nextPathsCache.containsKey(nextEvent)){
             return nextPathsCache.get(nextEvent);
         }else {
-           Set<String> nextPaths = this.router.nextMessagePaths(this.serviceName, this.event, eventSeq, nextEvent);
+           Set<String> nextPaths = this.router.nextMessagePaths(this.serviceName, this.eventId, eventSeq, nextEvent);
            this.nextPathsCache.put(nextEvent,nextPaths);
            return nextPaths;
         }
@@ -104,6 +104,13 @@ public class GAdaptor {
 
     public void clearNextPathCache(){
         this.nextPathsCache.clear();
+    }
+
+    public void redirectEvent(String event, GMessage message) {
+        Set<String> nextPaths = this.router.getEventPath(this.serviceName, event);
+        if(nextPaths != null){
+            this.router.toMessageBus(nextPaths, message);
+        }
     }
 }
 

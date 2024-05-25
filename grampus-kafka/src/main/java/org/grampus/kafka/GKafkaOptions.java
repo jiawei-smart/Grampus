@@ -34,6 +34,8 @@ public class GKafkaOptions implements GAPIConfig {
     private String consumerBufferMemory;
     private String securityProtocol = "SASL_PLAINTEXT";
     private long consumeIntervalMills = 300l;
+    private boolean isConsumerConfigured = true;
+    private boolean isProducerConfigured = true;
 
     private long startSeq = -1;
     private boolean isSeekToBeginningConsume = false;
@@ -235,11 +237,19 @@ public class GKafkaOptions implements GAPIConfig {
     }
 
     public boolean isProducerConfigured() {
-        return GStringUtil.isNotEmpty(this.producerTopic);
+        return GStringUtil.isNotEmpty(this.producerTopic) && isProducerConfigured;
+    }
+
+    public void isProducerConfigured(boolean isProducerConfigured) {
+        this.isProducerConfigured = isProducerConfigured;
     }
 
     public boolean isConsumerConfigured() {
-        return GStringUtil.isNotEmpty(this.consumerTopic);
+        return GStringUtil.isNotEmpty(this.consumerTopic) && isConsumerConfigured;
+    }
+
+    public void isConsumerConfigured(boolean isConsumerConfigured) {
+        this.isConsumerConfigured = isConsumerConfigured;
     }
 
     public String getSchemaRegisterUrl() {

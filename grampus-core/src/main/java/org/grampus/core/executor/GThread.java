@@ -5,7 +5,7 @@ import org.grampus.util.GDateTimeUtil;
 
 import java.util.concurrent.TimeUnit;
 
-public class GThread extends FastThreadLocalThread {
+class GThread extends FastThreadLocalThread {
     final GThreadInfo threadInfo;
 
     public GThread(Runnable runnable, GThreadInfo threadInfo) {
