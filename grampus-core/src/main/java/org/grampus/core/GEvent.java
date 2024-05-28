@@ -96,6 +96,11 @@ public class GEvent {
         return this;
     }
 
+    public<T> GEvent sink(GCell cell) {
+        this.cells.add(cell);
+        return this;
+    }
+
     public <T> GEvent then(BiConsumer<T, Map> handler) {
         this.cells.add(new GCell(handler));
         return this;

@@ -48,4 +48,5 @@ public class GConstant {
     public static final String PLUGIN_API_TYPE = "PLUGIN_API_TYPE";
 
     public static final long DEFAULT_THREAD_CHECK_INTERVAL_MILLS = 1l;
+    public static final String EVENT_SOURCE = "EVENT_SOURCE";
 }

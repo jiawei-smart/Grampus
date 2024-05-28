@@ -13,7 +13,7 @@ public class GRedisCell extends GPluginCell<Object> implements GRedisApi {
     public void start() {
         onStatus("redis start",false);
         GRedisOptions options = getConfig(GRedisOptions.class);
-        GRedisFactory redisFactory = GRedisFactory.instance();
+        GRedisCommandFactory redisFactory = GRedisCommandFactory.instance();
         if(options != null){
             syncCommands = redisFactory.getSyncCommand(options.getRedisUrl());
         }
@@ -82,6 +82,6 @@ public class GRedisCell extends GPluginCell<Object> implements GRedisApi {
 
     @Override
     public void close(){
-        GRedisFactory.instance().close();
+        GRedisCommandFactory.instance().close();
     }
 }

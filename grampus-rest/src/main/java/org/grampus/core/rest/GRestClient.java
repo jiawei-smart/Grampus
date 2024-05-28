@@ -1,5 +1,6 @@
 package org.grampus.core.rest;
 
+import com.google.gson.JsonSyntaxException;
 import org.grampus.core.annotation.rest.GRestController;
 import org.grampus.core.annotation.rest.GRestDispatcher;
 import org.grampus.core.annotation.rest.GRestMethodType;
@@ -14,6 +15,7 @@ import org.grampus.swagger.spec.ParameterSpec;
 import org.grampus.swagger.endpoint.ApiEndpoint;
 import org.grampus.swagger.endpoint.Endpoint;
 import org.grampus.swagger.model.HttpMethod;
+import org.grampus.swagger.util.TypeUitl;
 import org.grampus.util.GJsonUtil;
 import org.grampus.util.GStringUtil;
 import spark.Request;
@@ -23,6 +25,7 @@ import spark.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.grampus.swagger.spec.EndpointSpec.endpointPath;
 import static org.grampus.swagger.spec.MethodSpec.path;
@@ -35,7 +38,7 @@ public class GRestClient implements GAPIClient<GRestOptions> {
 
     @Override
     public boolean start(GRestOptions config) {
-        this.config =  config;
+        this.config = config;
         try {
             spark = Service.ignite()
                     .ipAddress(config.getHost())
@@ -45,14 +48,14 @@ public class GRestClient implements GAPIClient<GRestOptions> {
                     .generateDoc();
             return true;
         } catch (IOException e) {
-            GLogger.error("GRest: failure to start rest client, {}",e);
+            GLogger.error("GRest: failure to start rest client, {}", e);
             return false;
         }
     }
 
     private List<Endpoint> parseControllers() {
         List<Endpoint> endpointList = new ArrayList<>();
-        this.controllers.forEach(restController->{
+        this.controllers.forEach(restController -> {
             Endpoint endpoint = new Endpoint() {
                 @Override
                 public void bind(GSwagger swagger) {
@@ -64,16 +67,16 @@ public class GRestClient implements GAPIClient<GRestOptions> {
 
                         enrichParams(methodDescriptorBuilder, gRestMethodSpec.getParamSpecList(), gRestMethodSpec.getBodySpec());
                         MethodSpec methodSpec = methodDescriptorBuilder.build();
-                        Route route = buildRoute(restController.getDispatcher(),path, gRestMethodSpec.getParamSpecList());
+                        Route route = buildRoute(restController.getDispatcher(), path, gRestMethodSpec.getParamSpecList());
                         if (gRestMethodSpec.getRestMethodType() == GRestMethodType.GET) {
                             methodSpec.setMethod(HttpMethod.GET);
                             endpoint.get(methodSpec, route);
-                        }else if(gRestMethodSpec.getRestMethodType() == GRestMethodType.POST){
+                        } else if (gRestMethodSpec.getRestMethodType() == GRestMethodType.POST) {
                             methodSpec.setMethod(HttpMethod.POST);
                             endpoint.post(methodSpec, route);
-                        }else if(gRestMethodSpec.getRestMethodType() == GRestMethodType.DELETE){
+                        } else if (gRestMethodSpec.getRestMethodType() == GRestMethodType.DELETE) {
                             methodSpec.setMethod(HttpMethod.DELETE);
-                            endpoint.delete(methodSpec,route);
+                            endpoint.delete(methodSpec, route);
                         }
                     });
                 }
@@ -84,33 +87,43 @@ public class GRestClient implements GAPIClient<GRestOptions> {
     }
 
     private void enrichParams(MethodSpec.Builder methodDescriptorBuilder, List<GRestParamSpec> paramSpecList, GRestParamSpec bodySpec) {
-        if(bodySpec != null){
+        if (bodySpec != null) {
             methodDescriptorBuilder.withBody(ParameterSpec.newBuilder()
-                    .withName(bodySpec.getName())
-                    .withExample(bodySpec.getExample())
-                    .withDescription(bodySpec.getDescription())
+                            .withName(bodySpec.getName())
+                            .withExample(bodySpec.getExample())
+                            .withDescription(bodySpec.getDescription())
                             .withRequired(true)
-                    .build())
+                            .build())
                     .withRequestType(bodySpec.getType());
 
         }
-        if(paramSpecList != null && !paramSpecList.isEmpty()){
+        if (paramSpecList != null && !paramSpecList.isEmpty()) {
             paramSpecList.forEach(gRestParamSpec -> {
-                if(!gRestParamSpec.isBody()){
-                    methodDescriptorBuilder
-                            .withRequestType(gRestParamSpec.getType())
-                            .withFormParam(ParameterSpec.newBuilder()
+                if (!gRestParamSpec.isBody()) {
+                    ParameterSpec parameterSpec =  ParameterSpec.newBuilder()
                             .withName(gRestParamSpec.getName())
+                            .withRequired(gRestParamSpec.isRequire())
                             .withDescription(gRestParamSpec.getDescription())
-                            .withExample(gRestParamSpec.getExample()).build());
+                            .withObject(gRestParamSpec.getType())
+                            .build();
+                    if(GStringUtil.isNotEmpty(gRestParamSpec.getExample())){
+                        parameterSpec.setExample(gRestParamSpec.getExample());
+                    }
+                    methodDescriptorBuilder.withHeaderParam(parameterSpec);
                 }
             });
         }
     }
 
     private Route buildRoute(GRestDispatcher dispatcher, String path, List<GRestParamSpec> paramSpecs) {
-        return  (request, response) -> {
-            Object[] params = formatParams(paramSpecs,request);
+        return (request, response) -> {
+            Object[] params = null;
+            try{
+                params = formatParams(paramSpecs, request);
+            }catch (JsonSyntaxException e){
+                response.status(500);
+                return "invalid input content format!!";
+            }
             GRestResp restResp = dispatcher.dispatch(path, params);
             if (!restResp.hasError()) {
                 response.status(200);
@@ -122,19 +135,28 @@ public class GRestClient implements GAPIClient<GRestOptions> {
         };
     }
 
-    public Object[] formatParams(List<GRestParamSpec> parameters,Request request) {
+    public Object[] formatParams(List<GRestParamSpec> parameters, Request request) throws JsonSyntaxException {
         Object[] result = new Object[parameters.size()];
-        for (int i = 0;i<parameters.size();i++){
+        for (int i = 0; i < parameters.size(); i++) {
             GRestParamSpec gRestParamSpec = parameters.get(i);
-            if(gRestParamSpec.isBody()){
+            if (gRestParamSpec.isBody()) {
                 String body = request.body();
-                if( body == null || GStringUtil.isEmpty(body)){
+                if (body == null || GStringUtil.isEmpty(body)) {
                     result[i] = GStringUtil.EMPTY_STRING;
-                }else {
-                    result[i] = GJsonUtil.fromJson(body, gRestParamSpec.getType());
+                } else if(gRestParamSpec.getType() == String.class){
+                    result[i] = body;
+                } else {
+                    result[i] = GJsonUtil.fromJson(body,gRestParamSpec.getType());
                 }
-            }else {
-                result[i] = GJsonUtil.fromJson(request.queryParams(gRestParamSpec.getName()), gRestParamSpec.getType());
+            } else {
+                String param = request.headers(gRestParamSpec.getName());
+                if(param == null){
+                    result[i] = null;
+                }else if(gRestParamSpec.getType() == String.class){
+                    result[i] = param;
+                }else {
+                    result[i] = GJsonUtil.fromJson(param, gRestParamSpec.getType());
+                }
             }
         }
         return result;
@@ -142,7 +164,8 @@ public class GRestClient implements GAPIClient<GRestOptions> {
 
     @Override
     public boolean stop() {
-        this.spark.stop();;
+        this.spark.stop();
+        ;
         return true;
     }
 

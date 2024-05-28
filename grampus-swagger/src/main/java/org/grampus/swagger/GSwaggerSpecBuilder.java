@@ -102,7 +102,7 @@ public class GSwaggerSpecBuilder {
         requestBody.name(methodBody != null ? methodBody.getName() : "body");
         requestBody.description(methodBody != null ? methodBody.getDescription() : "Body object description");
         requestBody.setRequired(methodBody == null || methodBody.isRequired());
-        requestBody.setSchema(model);
+//        requestBody.setSchema(model);
         return requestBody;
     }
 }

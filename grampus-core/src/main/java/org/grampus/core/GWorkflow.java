@@ -23,14 +23,23 @@ public class GWorkflow {
     }
 
     public GService service(String serviceName, GService service) {
-        service.setName(serviceName);
-        service.setContext(this.context);
-        this.services.put(serviceName, service);
-        return service;
+        if(services.containsKey(serviceName)){
+            GLogger.error("Service [{}] already exists",serviceName);
+            return null;
+        }else {
+            service.setName(serviceName);
+            service.setContext(this.context);
+            this.services.put(serviceName, service);
+            return service;
+        }
     }
 
     public GService service(String serviceName) {
-       return this.service(serviceName, new GService(serviceName));
+       if(services.containsKey(serviceName)){
+           return services.get(serviceName);
+       }else {
+           return this.service(serviceName, new GService(serviceName));
+       }
     }
 
     public GWorkflow chain(String... chains){

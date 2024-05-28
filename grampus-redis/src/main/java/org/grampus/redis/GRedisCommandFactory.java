@@ -9,14 +9,14 @@ import io.lettuce.core.api.sync.RedisCommands;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GRedisFactory {
-   private static GRedisFactory instance = new GRedisFactory();
+public class GRedisCommandFactory {
+   private static GRedisCommandFactory instance = new GRedisCommandFactory();
     private Map<String, RedisClient> redisClients = new HashMap<>();
     private Map<RedisClient, StatefulRedisConnection> connectionMap = new HashMap<>();
 
-    private GRedisFactory() {}
+    private GRedisCommandFactory() {}
 
-    public static GRedisFactory instance() {
+    public static GRedisCommandFactory instance() {
         return instance;
     }
 

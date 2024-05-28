@@ -2,22 +2,27 @@ package org.grampus.core;
 
 import org.grampus.log.GLogger;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class GTester {
+    private static GTester current;
     private CountDownLatch countDownLatch;
     private Integer timeoutSeconds;
-    private List<Runnable> assertTasks = new ArrayList<>();
+    private Queue<Runnable> assertTasks = new ConcurrentLinkedDeque();
 
-    public GTester(Integer count, Integer timeoutSeconds) {
-        this.countDownLatch = new CountDownLatch(count);
-        this.timeoutSeconds = timeoutSeconds;
+    private GTester() {
     }
 
-    public void start(){
+    GTester(Integer count, Integer timeoutSeconds) {
+        this.countDownLatch = new CountDownLatch(count);
+        this.timeoutSeconds = timeoutSeconds;
+        current = this;
+    }
+
+    void start(){
         try {
             if(!countDownLatch.await(timeoutSeconds.longValue(), TimeUnit.SECONDS)){
                 GLogger.error("testcase timeout, than [{}] seconds", this.timeoutSeconds);
@@ -35,5 +40,14 @@ public class GTester {
     public void addAssertTask(Runnable assertTask){
         assertTasks.add(assertTask);
         countDownLatch.countDown();
+    }
+
+    public static GTester getCurrent() {
+        if(current == null){
+            GLogger.error("Only Test model has been enabled the assert feature after workflow test called !");
+            return null;
+        }else {
+            return current;
+        }
     }
 }

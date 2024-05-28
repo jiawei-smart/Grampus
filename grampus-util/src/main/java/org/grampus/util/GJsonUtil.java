@@ -29,5 +29,4 @@ public class GJsonUtil {
         return GSON.fromJson(mapJsonString, Map.class);
     }
 
-
 }

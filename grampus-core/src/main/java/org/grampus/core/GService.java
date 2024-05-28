@@ -76,7 +76,11 @@ public class GService implements GCellController, GMonitor {
         return this.cell(GConstant.DEFAULT_EVENT, cell);
     }
     public GService source(GCell cell) {
-        return this.cell(cell);
+        return this.cell(GConstant.DEFAULT_EVENT,cell);
+    }
+
+    public GService source(String event, GCell cell) {
+        return this.cell(event,cell);
     }
 
 
@@ -178,7 +182,7 @@ public class GService implements GCellController, GMonitor {
         return monitorMap;
     }
 
-    public GEvent event(String event){
+    public GEvent listen(String event){
         GEvent gEvent = new GEvent(this.name, event);
         this.events.put(gEvent.toString(),gEvent);
         return gEvent;

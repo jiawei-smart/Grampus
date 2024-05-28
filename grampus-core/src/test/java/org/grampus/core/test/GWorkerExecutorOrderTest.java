@@ -3,8 +3,8 @@ package org.grampus.core.test;
 import org.grampus.core.GCell;
 import org.grampus.core.GWorkflow;
 import org.grampus.log.GLogger;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 import java.util.Random;
@@ -97,7 +97,7 @@ class MsgReceiver extends GCell<Integer> {
         if (!expectedMsgSeq) {
             GLogger.error(" message ordering issue , expectedMsgASeq {},  payload {}", expectedMsgASeq, payload);
         }
-        assertTask(() -> Assert.assertTrue(expectedMsgSeq));
+        assertTask(() -> Assertions.assertTrue(expectedMsgSeq));
         expectedMsgASeq++;
     }
 }
