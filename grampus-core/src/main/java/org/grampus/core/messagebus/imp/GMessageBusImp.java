@@ -9,13 +9,16 @@ import org.grampus.core.message.GMessage;
 import org.grampus.core.message.GMessageCodec;
 import org.grampus.log.GLogger;
 
+import java.util.concurrent.TimeUnit;
+
 public class GMessageBusImp implements GMessageBus {
     private final Vertx vertx;
 
     public GMessageBusImp(GWorkflowOptions workflowOptions) {
         VertxOptions options = new VertxOptions();
-        options.setBlockedThreadCheckInterval(workflowOptions.getThreadProcessTimeout());
-        options.setBlockedThreadCheckIntervalUnit(workflowOptions.getThreadProcessTimeoutTimeUnit());
+        options.setWarningExceptionTime(workflowOptions.getThreadProcessTimeoutTimeUnit().convert(workflowOptions.getThreadProcessTimeout(), TimeUnit.MILLISECONDS));
+        options.setBlockedThreadCheckInterval(workflowOptions.getThreadCheckInterval());
+        options.setBlockedThreadCheckIntervalUnit(TimeUnit.MILLISECONDS);
         vertx = Vertx.vertx(options);
         vertx.eventBus().registerDefaultCodec(GMessage.class, new GMessageCodec());
     }

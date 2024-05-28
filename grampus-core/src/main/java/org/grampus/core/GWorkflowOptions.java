@@ -12,7 +12,7 @@ public class GWorkflowOptions {
     private int scheduledTheadPoolSize = GConstant.DEFAULT_SCHEDULE_WORKER_POOL_SIZE;
     private long threadCheckInterval = GConstant.DEFAULT_THREAD_CHECK_INTERVAL_MILLS;
     private TimeUnit threadCheckTimeUnit = TimeUnit.MILLISECONDS;
-    private long threadProcessTimeout = 25l;
+    private long threadProcessTimeout = 2000l;
     private TimeUnit threadProcessTimeoutTimeUnit = TimeUnit.MILLISECONDS;
 
     public GWorkflowOptions() {

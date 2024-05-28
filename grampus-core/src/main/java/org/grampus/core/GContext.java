@@ -3,6 +3,7 @@ package org.grampus.core;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import org.grampus.core.annotation.config.GValueSpec;
 import org.grampus.core.annotation.plugin.GPluginApi;
 import org.grampus.core.annotation.plugin.GPluginAutowired;
 import org.grampus.core.executor.GThreadChecker;
@@ -37,7 +38,8 @@ public class GContext {
     private Executor blockingExecutor;
     private GThreadChecker threadChecker;
     private Set<GCell> registeredCells = new HashSet<>();
-    Collection<GService> registeredServices;
+    private Collection<GService> registeredServices;
+    private GValueSpec gValueSpec;
 
     public GContext(String configYaml) {
         if (GFileUtil.isExistedInClasspath(configYaml)) {
@@ -46,6 +48,7 @@ public class GContext {
         if (options == null) {
             this.options = new GWorkflowOptions();
         }
+        gValueSpec = new GValueSpec(options.config());
         router = new GRouter(options);
         threadChecker = new GThreadChecker(options.getThreadCheckInterval(),options.getThreadCheckTimeUnit(),options.getThreadProcessTimeout(),options.getThreadProcessTimeoutTimeUnit());
         threadFactory =this.getGThreadFactory();
@@ -60,6 +63,7 @@ public class GContext {
         registeredServices =  services;
         router.parseWorkflowChain(chains);
         initServicesSupervisor(services);
+        gValueSpec.enrich(services);
         servicesInit(services);
         cellsInit(services);
         initCellsSupervisor(services);
@@ -92,6 +96,7 @@ public class GContext {
                     }
                 }
             }
+            gValueSpec.enrich(cell);
         }
     }
 

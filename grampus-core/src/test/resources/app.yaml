@@ -3,3 +3,4 @@
       S1:
         key: value
         env: !ENV ${myEnv}
+

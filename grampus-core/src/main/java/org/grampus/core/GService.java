@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 public class GService implements GCellController, GMonitor {
     private String name;
     private GContext context;
-//    private Map<GEvent, List<GCell>> cells = new HashMap<>();
     private final Map<String, GEvent> events = new HashMap<>();
     private GMonitorMap monitorMap;
 
@@ -44,7 +43,11 @@ public class GService implements GCellController, GMonitor {
     private void initMonitorMap() {
         this.monitorMap.put(GConstant.MONITOR_SERVICE_NAME,this.name);
         this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME, GDateTimeUtil.now());
-        this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME,this.events.values().stream().map(GEvent::getEventStem).collect(Collectors.joining()));
+        this.monitorMap.put(GConstant.MONITOR_SERVICE_START_TIME,this.events.keySet());
+    }
+
+    @Override
+    public void monitor(GMonitorMap monitorMap){
     }
 
     private void initCells() {
