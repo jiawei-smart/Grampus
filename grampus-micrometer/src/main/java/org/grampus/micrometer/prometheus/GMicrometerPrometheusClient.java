@@ -5,7 +5,6 @@ import io.github.mweirauch.micrometer.jvm.extras.ProcessMemoryMetrics;
 import io.github.mweirauch.micrometer.jvm.extras.ProcessThreadMetrics;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.binder.jvm.*;
-import io.micrometer.core.instrument.binder.logging.LogbackMetrics;
 import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
 import io.micrometer.prometheus.PrometheusRenameFilter;
@@ -30,7 +29,6 @@ public class GMicrometerPrometheusClient implements GAPIClient<GMicrometerPromet
         new ProcessorMetrics().bindTo(registry);
         new JvmThreadMetrics().bindTo(registry);
         new JvmInfoMetrics().bindTo(registry);
-        new LogbackMetrics().bindTo(registry);
         new JvmHeapPressureMetrics().bindTo(registry);
         new ProcessMemoryMetrics().bindTo(registry);
         new ProcessThreadMetrics().bindTo(registry);

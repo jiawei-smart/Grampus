@@ -1,10 +1,8 @@
 package org.grampus.log;
 
-import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Aspect
 public class GLogger {
     private static final Logger logger = LoggerFactory.getLogger(GLogger.class);
 
