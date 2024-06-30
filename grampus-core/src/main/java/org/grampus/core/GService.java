@@ -8,7 +8,6 @@ import org.grampus.util.GDateTimeUtil;
 
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 
 public class GService implements GCellController, GMonitor {
@@ -51,7 +50,7 @@ public class GService implements GCellController, GMonitor {
     }
 
     private void initCells() {
-        this.events.values().forEach(event->event.getCells().forEach(cell ->{
+        this.events.values().forEach(event->event.handler().getCells().forEach(cell ->{
             if(cell.state().value() < GCellState.REGISTERED.value()){
                 cell.initCell(this);
             }
@@ -59,7 +58,7 @@ public class GService implements GCellController, GMonitor {
     }
 
     public void cellsBeforeStart() {
-        this.events.values().forEach(event->event.getCells().forEach(cell ->{
+        this.events.values().forEach(event->event.handler().getCells().forEach(cell ->{
             if(cell.state().value() < GCellState.READY_TO_START.value()){
                 cell.beforeStart();
                 cell.state(GCellState.READY_TO_START);
@@ -68,7 +67,7 @@ public class GService implements GCellController, GMonitor {
     }
 
     public void startCells() {
-        this.events.values().forEach(event->event.getCells().forEach(cell ->{
+        this.events.values().forEach(event->event.handler().getCells().forEach(cell ->{
             if(!cell.isEndStarted()){
                 cell.cellStart();
             }
@@ -92,10 +91,10 @@ public class GService implements GCellController, GMonitor {
         if (!events.containsKey(eventKey)) {
             GEvent event = new GEvent(getName(),eventStr);
             events.put(eventKey,event);
-            event.then(cell);
+            event.handler().then(cell);
         }else {
             GEvent event = events.get(eventKey);
-            event.then(cell);
+            event.handler().then(cell);
         }
 
         return this;
@@ -104,7 +103,7 @@ public class GService implements GCellController, GMonitor {
     public GService cell(String eventStr, int index, GCell cell) {
         String eventKey =GEvent.id(this.name, eventStr);
         if (events.containsKey(eventKey)) {
-            List<GCell> cellList = events.get(eventKey).getCells();
+            List<GCell> cellList = events.get(eventKey).handler().getCells();
             if (cellList.size() > index) {
                 cellList.set(index, cell);
                 return this;
@@ -185,10 +184,10 @@ public class GService implements GCellController, GMonitor {
         return monitorMap;
     }
 
-    public GEvent listen(String event){
+    public GEventHandler listen(String event){
         GEvent gEvent = new GEvent(this.name, event);
         this.events.put(gEvent.toString(),gEvent);
-        return gEvent;
+        return gEvent.handler();
     }
 
     public void stop(){}

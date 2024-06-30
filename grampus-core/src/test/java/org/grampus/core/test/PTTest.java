@@ -67,6 +67,6 @@ public class PTTest {
                 chain("S1.E0->S2");
             }
         };
-        workflow.start();
+        workflow.startAll();
     }
 }

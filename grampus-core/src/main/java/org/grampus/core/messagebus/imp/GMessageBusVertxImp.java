@@ -11,10 +11,10 @@ import org.grampus.log.GLogger;
 
 import java.util.concurrent.TimeUnit;
 
-public class GMessageBusImp implements GMessageBus {
+public class GMessageBusVertxImp implements GMessageBus {
     private final Vertx vertx;
 
-    public GMessageBusImp(GWorkflowOptions workflowOptions) {
+    public GMessageBusVertxImp(GWorkflowOptions workflowOptions) {
         VertxOptions options = new VertxOptions();
         options.setWarningExceptionTime(workflowOptions.getThreadProcessTimeoutTimeUnit().convert(workflowOptions.getThreadProcessTimeout(), TimeUnit.MILLISECONDS));
         options.setBlockedThreadCheckInterval(workflowOptions.getThreadCheckInterval());

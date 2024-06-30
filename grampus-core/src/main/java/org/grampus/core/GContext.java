@@ -6,6 +6,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.grampus.core.annotation.config.GValueSpec;
 import org.grampus.core.annotation.plugin.GPluginApi;
 import org.grampus.core.annotation.plugin.GPluginAutowired;
+import org.grampus.core.environment.DefaultGEnvironment;
 import org.grampus.core.executor.GThreadChecker;
 import org.grampus.core.executor.GThreadFactory;
 import org.grampus.core.executor.GWorkerExecutor;
@@ -44,6 +45,8 @@ public class GContext {
     public GContext(String configYaml) {
         if (GFileUtil.isExistedInClasspath(configYaml)) {
             options = GYamlUtil.load(configYaml,GWorkflowOptions.class);
+        }else {
+            GLogger.warn("can not load config.yaml for [{}], will used default values",configYaml);
         }
         if (options == null) {
             this.options = new GWorkflowOptions();
@@ -83,7 +86,7 @@ public class GContext {
 
     private void cellsInit(Collection<GService> services) {
         services.forEach(service->{
-            registeredCells.addAll(service.getEvents().values().stream().flatMap(gEvent -> gEvent.getCells().stream()).collect(Collectors.toSet()));
+            registeredCells.addAll(service.getEvents().values().stream().flatMap(gEvent -> gEvent.handler().getCells().stream()).collect(Collectors.toSet()));
         });
         for (GCell cell : registeredCells) {
             Field[] fields = cell.getClass().getDeclaredFields();
@@ -170,7 +173,7 @@ public class GContext {
             stringBuilder.append("   -*- service: [" + gService.getName() + "]").append("\n");
             gService.getEvents().values().forEach((gEvent) -> {
                 stringBuilder.append("       -- event: " + gEvent.getEventStem()).append("  >>  cells: [");
-                gEvent.getCells().forEach(cell -> {
+                gEvent.handler().getCells().forEach(cell -> {
                     stringBuilder.append(cell.getId()).append(", ");
                 });
                 stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());

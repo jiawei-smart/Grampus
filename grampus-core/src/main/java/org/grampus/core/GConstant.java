@@ -3,6 +3,7 @@ package org.grampus.core;
 public class GConstant {
     public final static String DEFAULT_EVENT = "DEFAULT_EVENT";
     public final static String DEFAULT_CONFIG_YAML = "app.yaml";
+    public final static String ALL_SERVICES = "all";
     public final static String PLUGIN_SERVICE = "PLUGIN_SERVICE";
     public final static String EVENT_SPLIT_CHAR = ".";
     public static final String EVENT_ALL = "*";
@@ -49,4 +50,8 @@ public class GConstant {
 
     public static final long DEFAULT_THREAD_CHECK_INTERVAL_MILLS = 1l;
     public static final String EVENT_SOURCE = "EVENT_SOURCE";
+    public static final String CELLS = "cells";
+
+    public static final String GRAMPUS_CONFIG_YAML = "grampus.config";
+    public static final String GRAMPUS_SERVICES = "grampus.services";
 }

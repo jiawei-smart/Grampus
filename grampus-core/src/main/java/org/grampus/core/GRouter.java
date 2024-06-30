@@ -3,7 +3,7 @@ package org.grampus.core;
 import org.grampus.core.message.GMessage;
 import org.grampus.core.messagebus.GMessageBus;
 import org.grampus.core.messagebus.GMessageConsumer;
-import org.grampus.core.messagebus.imp.GMessageBusImp;
+import org.grampus.core.messagebus.imp.GMessageBusVertxImp;
 import org.grampus.util.GStringUtil;
 
 import java.util.*;
@@ -19,7 +19,8 @@ public class GRouter {
     private GWorkflowOptions options;
     public GRouter(GWorkflowOptions options) {
         this.options =options;
-        messageBus = new GMessageBusImp(options);
+//        messageBus = new GMessageBusDisruptImp(options);
+        messageBus = new GMessageBusVertxImp(options);
     }
 
     public void parseWorkflowChain(List<String> chainStrList) {
@@ -59,7 +60,7 @@ public class GRouter {
                 GAdaptor eventListenerAdaptor = registerAdaptor(event);
                 event.initDefaultEventListener(eventListenerAdaptor);
                 eventListenerTable.put(EVENT_PATH_START_SEQ,eventListenerAdaptor.getId());
-                List<GCell> cells = event.getCells();
+                List<GCell> cells = event.handler().getCells();
                 for (int i = 0; i < cells.size(); i++) {
                     GCell cell = cells.get(i);
                     GAdaptor adaptor = cell.adaptor();
