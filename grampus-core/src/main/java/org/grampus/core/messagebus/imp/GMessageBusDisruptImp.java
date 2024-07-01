@@ -2,7 +2,6 @@ package org.grampus.core.messagebus.imp;
 
 import com.lmax.disruptor.BusySpinWaitStrategy;
 import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -10,7 +9,7 @@ import io.netty.channel.EventLoop;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.vertx.core.impl.ConcurrentHashSet;
 import org.grampus.core.GWorkflowOptions;
-import org.grampus.core.executor.GSingleTaskQueue;
+import org.grampus.core.executor.GSingleTaskDisruptorQueue;
 import org.grampus.core.executor.GThreadChecker;
 import org.grampus.core.executor.GThreadFactory;
 import org.grampus.core.message.GMessage;
@@ -56,13 +55,11 @@ public class GMessageBusDisruptImp implements GMessageBus {
         if (disrupts.containsKey(topic)) {
             return disrupts.get(topic);
         }else {
-            Disruptor disruptor;
+            Disruptor<GBusDisruptMessage> disruptor;
             synchronized (disrupts) {
                 disruptor = new Disruptor<>(eventFactory, DEFAULT_RING_BUFFER_SIZE, Executors.newSingleThreadExecutor(), ProducerType.MULTI,
                         new BusySpinWaitStrategy());
-                disruptor.handleEventsWith(new EventHandler<GBusDisruptMessage>() {
-                    @Override
-                    public void onEvent(GBusDisruptMessage gBusDisruptMessage, long l, boolean b) throws Exception {
+                disruptor.handleEventsWith((gBusDisruptMessage, l, b)-> {
                         for(GBusDisruptConsumer disruptConsumer : consumers.get(topic)){
                             try {
                                 disruptConsumer.handle(gBusDisruptMessage.getMessage());
@@ -70,8 +67,7 @@ public class GMessageBusDisruptImp implements GMessageBus {
                                 logger.error("failed to handle message {}, with {}",gBusDisruptMessage.getMessage(),e);
                             }
                         }
-                    }
-                });
+                    });
                 consumers.put(topic, new ConcurrentHashSet<>());
                 disrupts.put(topic, disruptor);
             }
@@ -91,11 +87,11 @@ public class GMessageBusDisruptImp implements GMessageBus {
     }
 
     class GBusDisruptConsumer{
-        private GSingleTaskQueue taskQueue;
+        private GSingleTaskDisruptorQueue taskQueue;
         private GMessageConsumer consumer;
 
         public GBusDisruptConsumer(EventLoop executor, GMessageConsumer consumer) {
-            this.taskQueue = new GSingleTaskQueue(executor);
+            this.taskQueue = new GSingleTaskDisruptorQueue(executor);
             this.consumer = consumer;
         }
 
