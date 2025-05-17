@@ -2,7 +2,7 @@ package org.grampus.kafka;
 
 import org.grampus.log.GLogger;
 
-public class GKafkaSource<T> extends GKafkaCell<T>{
+public class GKafkaSource<T> extends GKafkaProcessor<T> {
 
     @Override
     public void start() {

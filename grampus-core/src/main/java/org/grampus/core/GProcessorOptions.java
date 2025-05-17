@@ -1,6 +1,6 @@
 package org.grampus.core;
 
-public class GCellOptions {
+public class GProcessorOptions {
     private int batchSize = 1;
     private int parallel = 1;
 

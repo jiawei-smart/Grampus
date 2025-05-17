@@ -12,39 +12,39 @@ import java.util.function.BiPredicate;
 
 public class GEventHandler {
     private final GEvent event;
-    private List<GCell> cells = new ArrayList<>();
+    private List<GProcessor> cells = new ArrayList<>();
 
     public GEventHandler(GEvent event) {
         this.event = event;
     }
 
-    public GEventHandler then(GCell cell){
-        this.cells.add(cell);
+    public GEventHandler then(GProcessor processor){
+        this.cells.add(processor);
         return this;
     }
-    public GEventHandler then(GCellEventHandler handler) {
-        this.cells.add(new GCell(handler));
+    public GEventHandler then(GProcessorHandler handler) {
+        this.cells.add(new GProcessor(handler));
         return this;
     }
 
     public<T> GEventHandler sink(BiConsumer<T, Map> handler) {
-        GCell cell = new GCell(handler);
-        cell.setSink(true);
-        this.cells.add(cell);
+        GProcessor processor = new GProcessor(handler);
+        processor.setSink(true);
+        this.cells.add(processor);
         return this;
     }
 
-    public<T> GEventHandler sink(GCell cell) {
-        this.cells.add(cell);
+    public<T> GEventHandler sink(GProcessor processor) {
+        this.cells.add(processor);
         return this;
     }
 
     public <T> GEventHandler then(BiConsumer<T, Map> handler) {
-        this.cells.add(new GCell(handler));
+        this.cells.add(new GProcessor(handler));
         return this;
     }
 
-    public List<GCell> getCells() {
+    public List<GProcessor> getCells() {
         return this.cells;
     }
 

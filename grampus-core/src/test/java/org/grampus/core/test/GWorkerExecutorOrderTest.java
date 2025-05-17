@@ -1,6 +1,6 @@
 package org.grampus.core.test;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.GWorkflow;
 import org.grampus.log.GLogger;
 import org.junit.jupiter.api.Assertions;
@@ -19,7 +19,7 @@ public class GWorkerExecutorOrderTest {
         GWorkflow workflow = new GWorkflow() {
             @Override
             public void buildWorkflow() {
-                service("SERVICE_1").cell(new GCell() {
+                service("SERVICE_1").process(new GProcessor() {
                     AtomicInteger task1MsgSeq = new AtomicInteger(1);
                     AtomicInteger  task2MsgSeq = new AtomicInteger(1);
                     AtomicInteger  task3MsgSeq = new AtomicInteger(1);
@@ -76,9 +76,9 @@ public class GWorkerExecutorOrderTest {
                     }
                 }).openEvent("TASK1", "TASK2", "TASK3");
                 service("SERVICE_2")
-                        .cell("TASK1", new MsgReceiver())
-                        .cell("TASK2", new MsgReceiver())
-                        .cell("TASK3", new MsgReceiver());
+                        .process("TASK1", new MsgReceiver())
+                        .process("TASK2", new MsgReceiver())
+                        .process("TASK3", new MsgReceiver());
                 chain("SERVICE_1.TASK1->SERVICE_2.TASK1", "SERVICE_1.TASK2->SERVICE_2.TASK2", "SERVICE_1.TASK3->SERVICE_2.TASK3");
             }
         };
@@ -88,7 +88,7 @@ public class GWorkerExecutorOrderTest {
 
 }
 
-class MsgReceiver extends GCell<Integer> {
+class MsgReceiver extends GProcessor<Integer> {
     Integer expectedMsgASeq = 1;
 
     @Override

@@ -1,10 +1,9 @@
 package org.grampus.fix;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.annotation.rest.*;
 import org.grampus.core.annotation.rest.spec.GRestGroupSpec;
 import org.grampus.log.GLogger;
-import org.grampus.util.GFileUtil;
 import quickfix.*;
 
 import java.io.IOException;
@@ -12,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @GRestGroup(id="fix")
-public class GFixCell extends GCell {
+public class GFixProcessor extends GProcessor {
     public static final String CONFIG_KEY = "fixConfig";
     public static final String DEFAULT_CONFIG_YAML = "fixConfig.yaml";
     public static final String ON_CREATE = "onCreate";

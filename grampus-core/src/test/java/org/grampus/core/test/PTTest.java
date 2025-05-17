@@ -1,8 +1,7 @@
 package org.grampus.core.test;
 
-import org.grampus.core.GCell;
-import org.grampus.core.GCellOptions;
-import org.grampus.core.executor.GTimer;
+import org.grampus.core.GProcessor;
+import org.grampus.core.GProcessorOptions;
 import org.grampus.core.GWorkflow;
 import org.grampus.core.message.GMessage;
 import org.grampus.log.GLogger;
@@ -19,11 +18,11 @@ public class PTTest {
 
             Integer messageSize = 10000;
 
-            Integer parallel = 10;
+            Integer parallel = 1;
 
             @Override
             public void buildWorkflow() {
-                service("S1").cell(new GCell() {
+                service("S1").process(new GProcessor() {
                     @Override
                     public void start() {
                         startTime = now();
@@ -36,9 +35,9 @@ public class PTTest {
                     }
                 }).openEvent("E0");
 
-                GCellOptions cellOptions = new GCellOptions();
+                GProcessorOptions cellOptions = new GProcessorOptions();
                 cellOptions.setParallel(parallel);
-                service("S2").cell(new GCell(cellOptions) {
+                service("S2").process(new GProcessor(cellOptions) {
                     Random random = new Random();
                     AtomicInteger receivedMsgCount = new AtomicInteger(0);
 

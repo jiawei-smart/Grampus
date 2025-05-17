@@ -1,12 +1,12 @@
 package org.grampus.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.log.GLogger;
 
 import java.util.Map;
 
-public class GKafkaCell<T> extends GCell<T> implements GKafkaMsgHandler{
+public class GKafkaProcessor<T> extends GProcessor<T> implements GKafkaMsgHandler{
     public static final String KAFKA_CONFIG_YAML = "kafkaConfig.yaml";
     public static final String KAFKA_CONFIG = "kafkaConfig";
     public static final String FROM_KAFKA = "FROM_KAFKA";

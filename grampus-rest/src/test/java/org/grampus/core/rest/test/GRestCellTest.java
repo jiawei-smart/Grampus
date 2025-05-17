@@ -7,7 +7,7 @@ public class GRestCellTest {
         GWorkflow workflow = new GWorkflow(){
             @Override
             public void buildWorkflow() {
-                service("TEST_SERVICE").cell(new TestCell());
+                service("TEST_SERVICE").process(new TestProcessor());
             }
         };
         workflow.start();

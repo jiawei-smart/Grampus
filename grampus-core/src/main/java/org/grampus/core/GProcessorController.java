@@ -5,7 +5,7 @@ import org.grampus.util.GYamlUtil;
 
 import java.util.concurrent.Executor;
 
-public interface GCellController {
+public interface GProcessorController {
    void submitBlockingTask(Runnable runnable);
    void submitTask(Runnable runnable);
    GTimer createTimer(Runnable runnable);

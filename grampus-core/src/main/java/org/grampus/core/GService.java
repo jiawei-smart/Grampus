@@ -1,5 +1,6 @@
 package org.grampus.core;
 
+import lombok.extern.slf4j.Slf4j;
 import org.grampus.core.executor.GTimer;
 import org.grampus.core.monitor.GMonitor;
 import org.grampus.core.monitor.GMonitorMap;
@@ -9,8 +10,8 @@ import org.grampus.util.GDateTimeUtil;
 import java.util.*;
 import java.util.concurrent.Executor;
 
-
-public class GService implements GCellController, GMonitor {
+@Slf4j
+public class GService implements GProcessorController, GMonitor {
     private String name;
     private GContext context;
     private final Map<String, GEvent> events = new HashMap<>();
@@ -30,7 +31,7 @@ public class GService implements GCellController, GMonitor {
     }
 
     void start(){
-        initCells();
+        initProcessors();
         initMonitorMap();
     }
 
@@ -49,85 +50,87 @@ public class GService implements GCellController, GMonitor {
     public void monitor(GMonitorMap monitorMap){
     }
 
-    private void initCells() {
-        this.events.values().forEach(event->event.handler().getCells().forEach(cell ->{
-            if(cell.state().value() < GCellState.REGISTERED.value()){
-                cell.initCell(this);
+    private void initProcessors() {
+        this.events.values().forEach(event->{
+            log.debug("starting event [{}] processors", event.getEventStem());
+            try{
+                event.handler().getCells().forEach(processor ->{
+                    if(processor.state().value() < GProcessorState.REGISTERED.value()){
+                        processor.initCell(this);
+                    }
+                });
+            }catch (Exception e){
+                log.error("error occurred while init event [{}] processors with{}", event.getEventStem(), e);
             }
-        }));
+        });
     }
 
     public void cellsBeforeStart() {
-        this.events.values().forEach(event->event.handler().getCells().forEach(cell ->{
-            if(cell.state().value() < GCellState.READY_TO_START.value()){
-                cell.beforeStart();
-                cell.state(GCellState.READY_TO_START);
+        this.events.values().forEach(event->event.handler().getCells().forEach(processor ->{
+            if(processor.state().value() < GProcessorState.READY_TO_START.value()){
+                processor.onStarting();
+                processor.state(GProcessorState.READY_TO_START);
             }
         }));
     }
 
     public void startCells() {
-        this.events.values().forEach(event->event.handler().getCells().forEach(cell ->{
-            if(!cell.isEndStarted()){
-                cell.cellStart();
+        this.events.values().forEach(event->event.handler().getCells().forEach(processor ->{
+            if(!processor.isEndStarted()){
+                processor.processorStart();
             }
         }));
     }
 
-    public GService cell(GCell cell) {
-        return this.cell(GConstant.DEFAULT_EVENT, cell);
+    public GService process(GProcessor processor) {
+        return this.process(GConstant.DEFAULT_EVENT, processor);
     }
-    public GService source(GCell cell) {
-        return this.cell(GConstant.DEFAULT_EVENT,cell);
-    }
-
-    public GService source(String event, GCell cell) {
-        return this.cell(event,cell);
+    public GService source(GProcessor processor) {
+        return this.process(GConstant.DEFAULT_EVENT,processor);
     }
 
+    public GService source(String event, GProcessor processor) {
+        return this.process(event,processor);
+    }
 
-    public GService cell(String eventStr, GCell cell) {
+
+    public GService process(String eventStr, GProcessor processor) {
         String eventKey =GEvent.id(this.name, eventStr);;
         if (!events.containsKey(eventKey)) {
             GEvent event = new GEvent(getName(),eventStr);
             events.put(eventKey,event);
-            event.handler().then(cell);
+            event.handler().then(processor);
         }else {
             GEvent event = events.get(eventKey);
-            event.handler().then(cell);
+            event.handler().then(processor);
         }
 
         return this;
     }
 
-    public GService cell(String eventStr, int index, GCell cell) {
+    public GService process(String eventStr, int index, GProcessor processor) {
         String eventKey =GEvent.id(this.name, eventStr);
         if (events.containsKey(eventKey)) {
-            List<GCell> cellList = events.get(eventKey).handler().getCells();
+            List<GProcessor> cellList = events.get(eventKey).handler().getCells();
             if (cellList.size() > index) {
-                cellList.set(index, cell);
+                cellList.set(index, processor);
                 return this;
             } else {
-                GLogger.warn("failure to replace GCell event:[{}], with index: [{}]", eventKey, index);
+                GLogger.warn("failure to replace GProcessor event:[{}], with index: [{}]", eventKey, index);
             }
         }
         return this;
     }
 
-    public void setCells(Map<String, List<GCell>> sourceCells) {
+    public void setProcessors(Map<String, List<GProcessor>> sourceCells) {
         if (sourceCells != null) {
             sourceCells.forEach((eventStr, cells) -> {
-                cells.forEach(cell -> {
-                    this.cell(eventStr,cell);
+                cells.forEach(processor -> {
+                    this.process(eventStr,processor);
                 });
             });
         }
     }
-
-//    protected Map<GEvent, List<GCell>> getCells() {
-//        return cells;
-//    }
-
 
     public Map<String, GEvent> getEvents() {
         return events;

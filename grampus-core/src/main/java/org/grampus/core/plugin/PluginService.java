@@ -20,11 +20,11 @@ public class PluginService extends GService {
             pluginCellClazzs.forEach(pluginClazz->{
                 GPlugin gPlugin = pluginClazz.getAnnotation(GPlugin.class);
                 try {
-                    if(GPluginCell.class.isAssignableFrom(pluginClazz)){
-                        GPluginCell gPluginCell = (GPluginCell) pluginClazz.getConstructor().newInstance();
-                        cell(gPlugin.event(),gPluginCell);
+                    if(GPluginProcessor.class.isAssignableFrom(pluginClazz)){
+                        GPluginProcessor gPluginCell = (GPluginProcessor) pluginClazz.getConstructor().newInstance();
+                        process(gPlugin.event(),gPluginCell);
                     }else {
-                        GLogger.error("GRestPlugin only can be used for GPluginCell, pls double check [{}]",pluginClazz);
+                        GLogger.error("GRestPlugin only can be used for GPluginProcessor, pls double check [{}]",pluginClazz);
                     }
                 } catch (Exception e){
                     GLogger.error("failure to init plugin with event [{}]", gPlugin.event());

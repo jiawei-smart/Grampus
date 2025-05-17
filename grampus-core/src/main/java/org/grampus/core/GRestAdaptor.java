@@ -16,30 +16,30 @@ import java.util.Map;
 public class GRestAdaptor  implements GRestDispatcher {
     private GRestController controller;
 
-    private GCell cell;
+    private GProcessor processor;
 
-    public GRestAdaptor(GCell cell) {
-        this.cell = cell;
+    public GRestAdaptor(GProcessor processor) {
+        this.processor = processor;
         this.controller = new GRestController();
     }
 
     public GRestController getController() {
-        GRestGroup gRestGroup = this.cell.getClass().getAnnotation(GRestGroup.class);
-        GRestGroupSpec cellRestGroupSpec = this.cell.getRestGroupSpec();
+        GRestGroup gRestGroup = this.processor.getClass().getAnnotation(GRestGroup.class);
+        GRestGroupSpec cellRestGroupSpec = this.processor.getRestGroupSpec();
         if(cellRestGroupSpec != null || gRestGroup != null){
             enrichMethodSpec();
             enrichGroupSpec(gRestGroup,cellRestGroupSpec);
             enrichStaticFileSpec();
         }
-        this.controller.setSessionId(this.cell.getId());
-        this.controller.setImplement(this.cell.getClass().getSimpleName());
+        this.controller.setSessionId(this.processor.getId());
+        this.controller.setImplement(this.processor.getClass().getSimpleName());
         this.controller.setDispatcher(this::dispatch);
         return this.controller;
     }
 
     private void enrichStaticFileSpec() {
-        GRestStaticFiles staticFiles = this.cell.getClass().getAnnotation(GRestStaticFiles.class);
-        GRestStaticFilesSpec cellRestStaticFilesSpec = this.cell.getRestStaticFilesSpec();
+        GRestStaticFiles staticFiles = this.processor.getClass().getAnnotation(GRestStaticFiles.class);
+        GRestStaticFilesSpec cellRestStaticFilesSpec = this.processor.getRestStaticFilesSpec();
         if(cellRestStaticFilesSpec != null){
             this.controller.setStaticFilesSpec(cellRestStaticFilesSpec);
         }else if(staticFiles != null){
@@ -53,7 +53,7 @@ public class GRestAdaptor  implements GRestDispatcher {
     }
 
     private void enrichMethodSpec() {
-        Method[] methods = this.cell.getClass().getMethods();
+        Method[] methods = this.processor.getClass().getMethods();
         Map<String, GRestMethodSpec> methodSpecs = new HashMap<>();
         for(Method method : methods){
             GRestMethod gRestMethod = method.getAnnotation(GRestMethod.class);
@@ -69,7 +69,7 @@ public class GRestAdaptor  implements GRestDispatcher {
                 parseRestMethod(gRestGet.path(), new GRestMethodSpec(gRestGet),method,methodSpecs);
             }
         }
-        List<GRestMethodSpec> cellRestMethodsSpec = this.cell.getRestMethodSpec();
+        List<GRestMethodSpec> cellRestMethodsSpec = this.processor.getRestMethodSpec();
         if(cellRestMethodsSpec != null){
             cellRestMethodsSpec.forEach(restMethodSpec->{
                 if(GStringUtil.isNotEmpty(restMethodSpec.getPath())){
@@ -84,7 +84,7 @@ public class GRestAdaptor  implements GRestDispatcher {
 
     private void parseRestMethod(String path, GRestMethodSpec methodSpec, Method method, Map<String, GRestMethodSpec> methodSpecs) {
         if(methodSpecs.containsKey(path)){
-            GLogger.error("GRest: same method path cannot be accepted, [{}], [{}]",path,this.cell.getId());
+            GLogger.error("GRest: same method path cannot be accepted, [{}], [{}]",path,this.processor.getId());
         }else {
             methodSpec.setMethod(method);
             if(methodSpec.parseParams()){
@@ -116,7 +116,7 @@ public class GRestAdaptor  implements GRestDispatcher {
 
     private GRestResp dispatch(Method method, Object[] params) throws Exception{
         method.setAccessible(true);
-        Object result = method.invoke(this.cell,params);
+        Object result = method.invoke(this.processor,params);
         if(result instanceof GRestResp){
             return (GRestResp) result;
         }else {

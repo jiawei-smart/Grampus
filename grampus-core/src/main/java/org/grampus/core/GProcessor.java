@@ -19,10 +19,10 @@ import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
-public class GCell<T> implements GMonitor, GCellEventHandler<T> {
-    private GCellOptions options;
+public class GProcessor<T> implements GMonitor, GProcessorHandler<T> {
+    private GProcessorOptions options;
     private GAdaptor adaptor;
-    private GCellController controller;
+    private GProcessorController controller;
     private BlockingQueue<GMessage> messageQueue = new LinkedBlockingDeque<>();
     private Set<String> parallelConsumerTopics = new HashSet<>();
     private Long lastHeartbeatTimeCost = 0L;
@@ -33,34 +33,34 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
     private Counter processedMsgCount;
     private Counter eventOutMsgCount;
     private BiConsumer<T,Map> voidHandler;
-    private GCellEventHandler handler;
+    private GProcessorHandler handler;
     private boolean isSink = false;
     private boolean endStarted = false;
 
-    private GCellState state = GCellState.UNREGISTERED;
+    private GProcessorState state = GProcessorState.UNREGISTERED;
 
-    public GCell() {
+    public GProcessor() {
     }
 
-    public GCell(GCellEventHandler handler) {
+    public GProcessor(GProcessorHandler handler) {
         this.handler = handler;
     }
-    public GCell(BiConsumer<T,Map> voidHandler) {
+    public GProcessor(BiConsumer<T,Map> voidHandler) {
         this.voidHandler = voidHandler;
     }
 
 
-    public GCell(GCellOptions options) {
+    public GProcessor(GProcessorOptions options) {
         this.options = options;
     }
 
     private enum CELL_HANDLE_ACTION {DATA_PUSH, TIMER_OFFSET}
 
 
-    void initCell(GCellController controller) {
+    void initCell(GProcessorController controller) {
         this.controller = controller;
         if (this.options == null) {
-            this.options = new GCellOptions();
+            this.options = new GProcessorOptions();
         }
         adaptor.consume((message) -> {
             GMsgType msgType = message.header.msgType();
@@ -76,10 +76,10 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
         monitorMap = new GMonitorMap(this);
         setParallel(options.getParallel());
         initMonitorMap();
-        receivedMsgCount = Metrics.counter("cell.received.message","cellId", getId());
-        processedMsgCount = Metrics.counter("cell.processed.message","cellId", getId());
-        eventOutMsgCount = Metrics.counter("cell.out.message","cellId", getId());
-        state = GCellState.REGISTERED;
+        receivedMsgCount = Metrics.counter("processor.received.message","cellId", getId());
+        processedMsgCount = Metrics.counter("processor.processed.message","cellId", getId());
+        eventOutMsgCount = Metrics.counter("processor.out.message","cellId", getId());
+        state = GProcessorState.REGISTERED;
     }
 
     private void initMonitorMap() {
@@ -88,14 +88,14 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
         this.monitorMap.put(GConstant.MONITOR_CELL_PNO_COUNT,this.options.getParallel());
     }
 
-    public void beforeStart() {
+    public void onStarting() {
     }
 
-    void cellStart() {
+    void processorStart() {
         controller.submitBlockingTask(()->{
             this.start();
-            if(state.value() < GCellState.WAITING.value()) {
-                onStatus("CELL Start",true);
+            if(state.value() < GProcessorState.WAITING.value()) {
+                onStatus("Processor Start",true);
             }
         });
         controller.submitTask(() -> onPlugin(GConstant.REST_PLUGIN, new GRestAdaptor(this).getController()));
@@ -117,10 +117,10 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
 
     protected void onStatus(String statusAudit, boolean status) {
         if (status) {
-            this.state = GCellState.RUNNING;
+            this.state = GProcessorState.RUNNING;
             clearMessageQueue();
         }else {
-            this.state = GCellState.WAITING;
+            this.state = GProcessorState.WAITING;
         }
     }
 
@@ -133,7 +133,7 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
     private synchronized void offset(CELL_HANDLE_ACTION cellAction, GMessage message) {
         if (cellAction == CELL_HANDLE_ACTION.DATA_PUSH) {
             this.messageQueue.offer(message);
-            if (messageQueue.size() == options.getBatchSize() && this.state == GCellState.RUNNING) {
+            if (messageQueue.size() == options.getBatchSize() && this.state == GProcessorState.RUNNING) {
                 this.drainTo(options.getBatchSize());
             }
         } else if (cellAction == CELL_HANDLE_ACTION.TIMER_OFFSET) {
@@ -196,11 +196,11 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
         Object out = handle(message.header(), (T) message.payload(), message.meta());
         if(out != null){
             message.setPayload(out);
-            onEvent(message);
+            toNext(message);
         }
     }
 
-    public void onEvent(Object message) {
+    public void toNext(Object message) {
         this.onEvent(null, message,null);
     }
 
@@ -219,7 +219,6 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
     public void redirectEvent(String event, GMessage message) {
         this.adaptor.redirectEvent(event, message);
     }
-
 
     public void onPlugin(String event, Object msg) {
         GMessage message = GMessage.newBusinessMessage().setPayload(msg);
@@ -247,7 +246,7 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
         this.controller.submitAssertTask(runnable);
     }
 
-    public void setOptions(GCellOptions options) {
+    public void setOptions(GProcessorOptions options) {
         this.options = options;
     }
 
@@ -259,7 +258,7 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
         return this.adaptor;
     }
 
-    public GCellController getController() {
+    public GProcessorController getController() {
         return controller;
     }
 
@@ -330,10 +329,10 @@ public class GCell<T> implements GMonitor, GCellEventHandler<T> {
         isSink = sink;
     }
 
-    GCellState state(){
+    GProcessorState state(){
         return state;
     }
-    void state(GCellState state){
+    void state(GProcessorState state){
         this.state = state;
     }
 

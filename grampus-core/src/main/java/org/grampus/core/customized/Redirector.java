@@ -1,9 +1,9 @@
 package org.grampus.core.customized;
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.message.GMessage;
 import org.grampus.util.GStringUtil;
 
-public class Redirector extends GCell {
+public class Redirector extends GProcessor {
     private String event;
 
     public Redirector() {

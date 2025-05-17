@@ -2,11 +2,11 @@ package org.grampus.micrometer.prometheus;
 
 import org.grampus.core.GConstant;
 import org.grampus.core.annotation.plugin.GPlugin;
-import org.grampus.core.plugin.GPluginCell;
+import org.grampus.core.plugin.GPluginProcessor;
 import org.grampus.log.GLogger;
 
 @GPlugin(event = GConstant.MICROMETER_PROMETHEUS_PLUGIN)
-public class GMicrometerPrometheusCell<T> extends GPluginCell<T> {
+public class GMicrometerPrometheusProcessor<T> extends GPluginProcessor<T> {
     private static final String MICROMETER_CONFIG = "micrometerConfig";
     private static final String MICROMETER_CONFIG_FILE = "micrometerConfig.yaml";
     private GMicrometerPrometheusClient client;
@@ -21,13 +21,13 @@ public class GMicrometerPrometheusCell<T> extends GPluginCell<T> {
     }
 
     @Override
-    public void beforeStart() {
+    public void onStarting() {
         GMicrometerPrometheusOptions config = this.getConfig(GMicrometerPrometheusOptions.class);
         if(config != null){
             this.client = new GMicrometerPrometheusClient();
             this.client.start(config);
         }else {
-            GLogger.info("GMicrometerOptions is null, will ignore GMicrometer cell start");
+            GLogger.info("GMicrometerOptions is null, will ignore GMicrometer processor start");
         }
     }
 }

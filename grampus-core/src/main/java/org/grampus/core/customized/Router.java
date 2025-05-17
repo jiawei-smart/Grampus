@@ -1,12 +1,12 @@
 package org.grampus.core.customized;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.message.GMessage;
 
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public class Router<T,C> extends GCell<T> {
+public class Router<T,C> extends GProcessor<T> {
     private final BiFunction<T, Map, C> predictorCondition;
     private final Map<C, String> evenConditiontMap;
 

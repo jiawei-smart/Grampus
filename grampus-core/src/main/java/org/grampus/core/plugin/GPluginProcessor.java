@@ -1,11 +1,11 @@
 package org.grampus.core.plugin;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.log.GLogger;
 
 import java.util.Map;
 
-public class GPluginCell<T> extends GCell<T> {
+public class GPluginProcessor<T> extends GProcessor<T> {
     @Override
     public void handle(T payload, Map meta) {
         if(payload instanceof GPluginMessage){

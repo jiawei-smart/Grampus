@@ -1,12 +1,12 @@
 package org.grampus.core.customized;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.message.GMessageHeader;
 
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public class Mapper<I,O> extends GCell<I> {
+public class Mapper<I,O> extends GProcessor<I> {
     private final BiFunction<I,Map,O> mapper;
 
     public Mapper(BiFunction<I,Map, O> mapper) {

@@ -1,14 +1,8 @@
 package org.grampus.kafka;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.grampus.core.GCell;
 import org.grampus.log.GLogger;
 
-import java.util.Map;
-
-import static org.grampus.kafka.GKafkaCell.*;
-
-public class GKafkaSink<T> extends GKafkaCell<T>{
+public class GKafkaSink<T> extends GKafkaProcessor<T> {
 
     @Override
     public void start() {

@@ -1,6 +1,6 @@
 package org.grampus.core.test;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.GWorkflow;
 import org.grampus.core.annotation.config.GEnvValue;
 import org.grampus.core.annotation.config.GValue;
@@ -17,7 +17,7 @@ public class GValueTest {
             @Override
             public void buildWorkflow() {
                 service("S1")
-                        .source(new GCell() {
+                        .source(new GProcessor() {
                             @GValue("S1.key")
                             private String key;
 

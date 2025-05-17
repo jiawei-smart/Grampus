@@ -1,10 +1,10 @@
 package org.grampus.core;
 
-public enum GCellState {
+public enum GProcessorState {
     UNREGISTERED(0), REGISTERED(1), READY_TO_START(2),WAITING(4),RUNNING(5),STOPPED(6);
     private final int value;
 
-    GCellState(int value) {
+    GProcessorState(int value) {
         this.value = value;
     }
 

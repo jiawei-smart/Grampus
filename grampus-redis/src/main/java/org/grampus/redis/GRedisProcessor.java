@@ -3,11 +3,11 @@ package org.grampus.redis;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.grampus.core.annotation.plugin.GPlugin;
 import org.grampus.core.plugin.GAsyncResult;
-import org.grampus.core.plugin.GPluginCell;
+import org.grampus.core.plugin.GPluginProcessor;
 import org.grampus.core.plugin.GPromise;
 
 @GPlugin(event = GRedisConstant.REDIS_EVENT)
-public class GRedisCell extends GPluginCell<Object> implements GRedisApi {
+public class GRedisProcessor extends GPluginProcessor<Object> implements GRedisApi {
     private RedisCommands syncCommands;
     @Override
     public void start() {

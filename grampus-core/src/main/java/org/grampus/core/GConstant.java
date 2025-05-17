@@ -18,12 +18,12 @@ public class GConstant {
     public static final String MONITOR_SERVICE_START_TIME = "service.start.time";
     public static final String MONITOR_SERVICE_NAME = "service.name";
     public static final String MONITOR_SERVICE_INCLUDED_EVENTS = "service.included.events";
-    public static final String MONITOR_CELL_MESSAGE_QUEUE_SIZE = "cell.message.queue.size";
-    public static final String MONITOR_CELL_START_TIME = "cell.start.time";
-    public static final String MONITOR_CELL_LAST_HEARTBEAT_LATENCY = "cell.last.heartbeat.latency";
-    public static final String MONITOR_CELL_ID = "cell.id";
-    public static final String MONITOR_CELL_PNO_COUNT = "cell.pno.count";
-    public static final String MONITOR_CELL_BATCH_SIZE = "cell.batch.size";
+    public static final String MONITOR_CELL_MESSAGE_QUEUE_SIZE = "processor.message.queue.size";
+    public static final String MONITOR_CELL_START_TIME = "processor.start.time";
+    public static final String MONITOR_CELL_LAST_HEARTBEAT_LATENCY = "processor.last.heartbeat.latency";
+    public static final String MONITOR_CELL_ID = "processor.id";
+    public static final String MONITOR_CELL_PNO_COUNT = "processor.pno.count";
+    public static final String MONITOR_CELL_BATCH_SIZE = "processor.batch.size";
 
     public static final String GRAMPUS_LOGO = "\n" +
             "  ________                                          \n" +

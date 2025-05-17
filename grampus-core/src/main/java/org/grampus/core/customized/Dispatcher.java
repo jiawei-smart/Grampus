@@ -1,11 +1,11 @@
 package org.grampus.core.customized;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 
 import java.util.Map;
 import java.util.Set;
 
-public class Dispatcher extends GCell {
+public class Dispatcher extends GProcessor {
     private final Set<String> targetEvents;
 
     public Dispatcher(Set<String> targetEvents) {

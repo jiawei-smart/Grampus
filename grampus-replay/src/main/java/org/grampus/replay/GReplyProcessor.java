@@ -1,6 +1,6 @@
 package org.grampus.replay;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.annotation.rest.GRestGet;
 import org.grampus.core.annotation.rest.GRestParam;
 import org.grampus.core.annotation.rest.GRestPost;
@@ -12,7 +12,7 @@ import org.grampus.log.GLogger;
 import java.util.Map;
 import java.util.Set;
 
-public class GReplyCell<T> extends GCell<T> {
+public class GReplyProcessor<T> extends GProcessor<T> {
     public static final String REPLAY_CONFIG = "replayConfig";
     public static final String REPLAY_CONFIG_YAML = "replayConfig.yaml";
 
@@ -76,7 +76,7 @@ public class GReplyCell<T> extends GCell<T> {
         try {
             Object value = this.client.get(messageKey);
             if (value != null) {
-                onEvent(value);
+                toNext(value);
                 return GRestResp.responseResp("GReplay replay message success: " + value);
             } else {
                 return GRestResp.errorResp("GReplay cannot found a message for key: " + messageKey);

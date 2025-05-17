@@ -1,6 +1,6 @@
 package org.grampus.core.test;
 
-import org.grampus.core.GCell;
+import org.grampus.core.GProcessor;
 import org.grampus.core.GWorkflow;
 import org.grampus.log.GLogger;
 import org.junit.jupiter.api.Assertions;
@@ -17,7 +17,7 @@ public class MesasgeOrderTest {
         GWorkflow workflow = new GWorkflow() {
             @Override
             public void buildWorkflow() {
-                service("SERVICE_1").cell(new GCell() {
+                service("SERVICE_1").process(new GProcessor() {
                     Integer task1MsgSeq = 1;
                     Integer task2MsgSeq = 1;
                     Integer task3MsgSeq = 1;
@@ -70,9 +70,9 @@ public class MesasgeOrderTest {
                     }
                 }).openEvent("TASK1", "TASK2", "TASK3");
                 service("SERVICE_2")
-                        .cell("TASK1", new MsgReceiveCell())
-                        .cell("TASK2", new MsgReceiveCell())
-                        .cell("TASK3", new MsgReceiveCell());
+                        .process("TASK1", new MsgReceiveProcessor())
+                        .process("TASK2", new MsgReceiveProcessor())
+                        .process("TASK3", new MsgReceiveProcessor());
                 chain("SERVICE_1.TASK1->SERVICE_2.TASK1", "SERVICE_1.TASK2->SERVICE_2.TASK2", "SERVICE_1.TASK3->SERVICE_2.TASK3");
             }
         };
@@ -82,7 +82,7 @@ public class MesasgeOrderTest {
 
 }
 
-class MsgReceiveCell extends GCell<Integer> {
+class MsgReceiveProcessor extends GProcessor<Integer> {
     Integer expectedMsgASeq = 1;
 
     @Override

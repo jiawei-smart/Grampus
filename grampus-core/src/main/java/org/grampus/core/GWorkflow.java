@@ -108,9 +108,9 @@ public class GWorkflow {
                 if (this.services.containsKey(key) &&
                         configValue instanceof Map && ((Map<?, ?>) configValue).containsKey(GConstant.CELLS)) {
                     GService service = this.services.get(key);
-                    Map<String, List<GCell>> cells = (Map<String, List<GCell>>) configValue;
+                    Map<String, List<GProcessor>> cells = (Map<String, List<GProcessor>>) configValue;
                     cells.forEach((event, cellList) -> {
-                        cellList.forEach(cell -> service.cell(event, cell));
+                        cellList.forEach(processor -> service.process(event, processor));
                     });
                 }
             } catch (Exception e) {

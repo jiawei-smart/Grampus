@@ -60,13 +60,13 @@ public class GRouter {
                 GAdaptor eventListenerAdaptor = registerAdaptor(event);
                 event.initDefaultEventListener(eventListenerAdaptor);
                 eventListenerTable.put(EVENT_PATH_START_SEQ,eventListenerAdaptor.getId());
-                List<GCell> cells = event.handler().getCells();
+                List<GProcessor> cells = event.handler().getCells();
                 for (int i = 0; i < cells.size(); i++) {
-                    GCell cell = cells.get(i);
-                    GAdaptor adaptor = cell.adaptor();
+                    GProcessor processor = cells.get(i);
+                    GAdaptor adaptor = processor.adaptor();
                     if(adaptor == null){
                         adaptor = registerAdaptor(service.getName(), event.getEventStem(), i);
-                        cell.setAdaptor(adaptor);
+                        processor.setAdaptor(adaptor);
                     }
                     eventListenerTable.put(i, adaptor.getId());
                 }

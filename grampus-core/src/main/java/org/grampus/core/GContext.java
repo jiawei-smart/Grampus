@@ -6,7 +6,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import org.grampus.core.annotation.config.GValueSpec;
 import org.grampus.core.annotation.plugin.GPluginApi;
 import org.grampus.core.annotation.plugin.GPluginAutowired;
-import org.grampus.core.environment.DefaultGEnvironment;
 import org.grampus.core.executor.GThreadChecker;
 import org.grampus.core.executor.GThreadFactory;
 import org.grampus.core.executor.GWorkerExecutor;
@@ -15,6 +14,8 @@ import org.grampus.core.plugin.GPluginMessage;
 import org.grampus.log.GLogger;
 import org.grampus.util.GFileUtil;
 import org.grampus.util.GYamlUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 
 public class GContext {
 
+    private static final Logger log = LoggerFactory.getLogger(GContext.class);
     private GWorkflowOptions options;
     public final GRouter router;
     private final GMonitorSupervisor servicesSupervisor = new GMonitorSupervisor();
@@ -38,7 +40,7 @@ public class GContext {
     private ScheduledExecutorService scheduledExecutor;
     private Executor blockingExecutor;
     private GThreadChecker threadChecker;
-    private Set<GCell> registeredCells = new HashSet<>();
+    private Set<GProcessor> registeredCells = new HashSet<>();
     private Collection<GService> registeredServices;
     private GValueSpec gValueSpec;
 
@@ -88,18 +90,18 @@ public class GContext {
         services.forEach(service->{
             registeredCells.addAll(service.getEvents().values().stream().flatMap(gEvent -> gEvent.handler().getCells().stream()).collect(Collectors.toSet()));
         });
-        for (GCell cell : registeredCells) {
-            Field[] fields = cell.getClass().getDeclaredFields();
+        for (GProcessor processor : registeredCells) {
+            Field[] fields = processor.getClass().getDeclaredFields();
             for (Field field : fields) {
                 if (field.isAnnotationPresent(GPluginAutowired.class)) {
                     if (field.getType().isAnnotationPresent(GPluginApi.class)) {
-                        injectHandlerProxy(cell, field);
+                        injectHandlerProxy(processor, field);
                     } else {
                         GLogger.warn(" the GPlugin autowired type [{}] un-accepted non-GPluginApi class", field.getType());
                     }
                 }
             }
-            gValueSpec.enrich(cell);
+            gValueSpec.enrich(processor);
         }
     }
 
@@ -113,18 +115,18 @@ public class GContext {
         };
     }
 
-    private void injectHandlerProxy(GCell cell, Field field) {
+    private void injectHandlerProxy(GProcessor processor, Field field) {
         String pluginEvent = field.getType().getAnnotation(GPluginApi.class).event();
         Object proxy = Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[]{field.getType()}, new InvocationHandler() {
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                cell.onPlugin(pluginEvent, new GPluginMessage(method,args));
+                processor.onPlugin(pluginEvent, new GPluginMessage(method,args));
                 return null;
             }
         });
         field.setAccessible(true);
         try {
-            field.set(cell, proxy);
+            field.set(processor, proxy);
         } catch (IllegalAccessException e) {
             GLogger.warn("failure to inject GPluginApi for [{}]", field.getType());
         }
@@ -140,16 +142,20 @@ public class GContext {
 
     private void servicesStart(Collection<GService> services) {
         services.forEach(service -> {
-            service.start();
+            try{
+                service.start();
+            }catch (Exception e) {
+                log.error("error starting GService [{}] ,{}", service.getName(),e);
+            }
         });
-        registeredCells.forEach(cell -> {
-            this.cellsSupervisor.broadcast(cell.getId(), cell.monitorMap());
+        registeredCells.forEach(processor -> {
+            this.cellsSupervisor.broadcast(processor.getId(), processor.monitorMap());
         });
     }
 
     private void initCellsSupervisor(Collection<GService> services) {
-        registeredCells.forEach(cell -> {
-            this.cellsSupervisor.addMonitor(cell);
+        registeredCells.forEach(processor -> {
+            this.cellsSupervisor.addMonitor(processor);
         });
     }
 
@@ -173,8 +179,8 @@ public class GContext {
             stringBuilder.append("   -*- service: [" + gService.getName() + "]").append("\n");
             gService.getEvents().values().forEach((gEvent) -> {
                 stringBuilder.append("       -- event: " + gEvent.getEventStem()).append("  >>  cells: [");
-                gEvent.handler().getCells().forEach(cell -> {
-                    stringBuilder.append(cell.getId()).append(", ");
+                gEvent.handler().getCells().forEach(processor -> {
+                    stringBuilder.append(processor.getId()).append(", ");
                 });
                 stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
                 stringBuilder.append("]\n");
@@ -231,7 +237,7 @@ public class GContext {
     }
 
     public void close(){
-        registeredCells.forEach(cell -> cell.close());
+        registeredCells.forEach(processor -> processor.close());
         servicesSupervisor.close();
         cellsSupervisor.close();
         scheduledExecutor.shutdownNow();

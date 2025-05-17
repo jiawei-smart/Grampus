@@ -3,7 +3,7 @@ import org.grampus.core.GConstant;
 import org.grampus.core.annotation.plugin.GPlugin;
 import org.grampus.core.annotation.rest.GRestController;
 import org.grampus.core.monitor.GMonitorMap;
-import org.grampus.core.plugin.GPluginCell;
+import org.grampus.core.plugin.GPluginProcessor;
 import org.grampus.log.GLogger;
 
 import java.io.File;
@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @GPlugin(event = GConstant.REST_PLUGIN)
-public class GRestCell extends GPluginCell<GRestController> {
+public class GRestProcessor extends GPluginProcessor<GRestController> {
     public static final String GREST_CONFIG_KEY = "restConfig";
     public static final String REST_DEFAULT_CONFIG_YAML = "plugin/rest.yaml";
     private GRestClient client;
